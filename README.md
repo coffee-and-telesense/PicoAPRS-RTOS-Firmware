@@ -65,10 +65,10 @@ For Linux/MacOS:
 ### 📥 Project Setup
 ```bash
 # Clone repository
-git clone https://github.com/coffee-and-telesense/PicoAPRS-Firmware.git
+git clone https://github.com/coffee-and-telesense/PicoAPRS-RTOS-Firmware.git
 
 # Open in VSCode
-code PicoAPRS-Firmware
+code PicoAPRS-RTOS-Firmware
 ```
 
 ### 🔧 Project Import
