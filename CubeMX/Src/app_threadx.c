@@ -23,7 +23,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,6 +48,9 @@
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 
+__attribute__((weak)) UINT app_init_hook(VOID *memory_ptr){
+  return TX_SUCCESS; // This obviously does nothing, the user should override this function
+}
 /* USER CODE END PFP */
 
 /**
@@ -60,7 +62,9 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 {
   UINT ret = TX_SUCCESS;
   /* USER CODE BEGIN App_ThreadX_MEM_POOL */
-
+  // Call weak function so each application can define its own initialization handle
+  // See apps/uart_echo_app/uart_echo_app.c for an example
+  ret = app_init_hook(memory_ptr); 
   /* USER CODE END App_ThreadX_MEM_POOL */
   /* USER CODE BEGIN App_ThreadX_Init */
   /* USER CODE END App_ThreadX_Init */
