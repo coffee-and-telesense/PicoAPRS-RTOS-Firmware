@@ -7,10 +7,13 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif()
 
 project(PicoAPRS-RTOS-Firmware C CXX ASM)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 # Add the CubeMX library
 add_subdirectory(CubeMX/cmake/stm32cubemx)
+add_subdirectory(libs/gps)
 
 # Add your test app
 add_subdirectory(apps/uart_echo_app)
+add_subdirectory(apps/gps_demo_app)
