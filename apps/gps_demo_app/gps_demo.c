@@ -36,40 +36,40 @@ static max_m10s_init_s gps_init;
   * @brief Main application entry point
   */
 void gps_demo_run(void) {
-   status_t status;
+  status_t status;
    
-   printf("GPS Demo Application Starting...\r\n");
+  printf("GPS Demo Application Starting...\r\n");
    
-   // Initialize GPS configuration
-   gps_init.hi2c = &hi2c1;
-    gps_init.htim = &htim2;
-   gps_init.device_address = 0x42;
-   gps_init.timeout_ms = 1000;
-   gps_init.use_interrupts = 0;  // Blocking mode FIXME:
-   // Set up function pointers - no casts needed
-    gps_init.transmit_blocking = HAL_I2C_Master_Transmit;
-    gps_init.receive_blocking = HAL_I2C_Master_Receive;
-    gps_init.transmit_it = HAL_I2C_Master_Transmit_IT;
-    gps_init.receive_it = HAL_I2C_Master_Receive_IT;
-    gps_init.delay_it = timer_delay_ms_it;  
+  // Initialize GPS configuration
+  gps_init.hi2c = &hi2c1;
+  //gps_init.htim = &htim2;
+  gps_init.device_address = 0x42;
+  gps_init.timeout_ms = 1000;
+  //gps_init.use_interrupts = 0;  // Blocking mode FIXME:
+  // Set up function pointers - no casts needed
+  gps_init.transmit_blocking = HAL_I2C_Master_Transmit;
+  gps_init.receive_blocking = HAL_I2C_Master_Receive;
+  gps_init.transmit_it = HAL_I2C_Master_Transmit_IT;
+  gps_init.receive_it = HAL_I2C_Master_Receive_IT;
+  gps_init.delay_it = timer_delay_ms_it;  
    
-   printf("Initializing GPS device...\r\n");
+  printf("Initializing GPS device...\r\n");
    
-   // Initialize the GPS device
-   status = max_m10s_init(&gps_dev, &gps_init);
-   print_status("GPS initialization", status);
+  // Initialize the GPS device
+  status = max_m10s_init(&gps_dev, &gps_init);
+  print_status("GPS initialization", status);
    
-   if (status == 0x00) {  // Success status
-     printf("GPS device initialized successfully!\r\n");
-     printf("GPS configuration completed. Device is in UBX protocol mode.\r\n");
-   } else {
-     printf("GPS initialization failed with status: 0x%02lX\r\n", status);
-     return;
-   }
+  if (status == 0x00) {  // Success status
+    printf("GPS device initialized successfully!\r\n");
+    printf("GPS configuration completed. Device is in UBX protocol mode.\r\n");
+  } else {
+    printf("GPS initialization failed with status: 0x%02lX\r\n", status);
+    return;
+  }
    
-   // Main application loop
-   printf("Entering main loop...\r\n");
-    while (1) {
+  // Main application loop
+  printf("Entering main loop...\r\n");
+  while (1) {
     // Add your application code here
     // For example:
     // - Periodically read position data
@@ -80,8 +80,8 @@ void gps_demo_run(void) {
      
     // For demo purposes, just toggle an LED to show the application is running
     HAL_GPIO_TogglePin(User_LED_GPIO_Port, User_LED_Pin);
-   }
- }
+  }
+}
 
 
 /**

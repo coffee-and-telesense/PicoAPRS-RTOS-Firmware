@@ -17,3 +17,6 @@ add_subdirectory(libs/gps)
 # Add your test app
 add_subdirectory(apps/uart_echo_app)
 add_subdirectory(apps/gps_demo_app)
+
+# Add tests
+add_subdirectory(tests/gps_simple_test)
