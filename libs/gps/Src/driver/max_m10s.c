@@ -1,6 +1,5 @@
 #include "max_m10s.h"
 
-// Foward Function Declaration
 /**
  * @brief Inserts wait states for I2C to complete, this allows for blocking type behavior
  *         even if driver is compiled for non-blocking operations.
@@ -35,7 +34,7 @@ gps_status_e max_m10s_init(max_m10s_dev_s *dev, const max_m10s_init_s *init)
     dev->tx_size = 0;
     dev->rx_size = 0;
     
-    // Step 1: Initialize UBX protocol for I2C communication
+    // Initialize UBX protocol for I2C communication
     msg_size = ubx_prepare_config_cmd(dev->tx_buffer, UBX_CFG_I2C_UBX_ENABLE, 1);
     dev->tx_size = msg_size;
 
@@ -48,9 +47,9 @@ gps_status_e max_m10s_init(max_m10s_dev_s *dev, const max_m10s_init_s *init)
     }
     // Wait for I2C to complete
     I2C_WAIT(dev);
-    // Insert wait states for I2C to complete
-    // Step 2: Ensure delay time is completed, this requires one second delay, I'm not sure why. 
-    dev->configs.delay_blocking(1000); // 1 second delay
+    
+    //Ensure delay time is completed, this requires one second delay, I'm not sure why. 
+    dev->configs.delay_blocking(1000); // 1 s delay
     // Step 3: Check for ACK response
     hal_status = GPS_RECEIVE(dev, dev->configs.device_address, dev->rx_buffer, 10); // Expecting 10 bytes for ACK response
     
@@ -66,7 +65,7 @@ gps_status_e max_m10s_init(max_m10s_dev_s *dev, const max_m10s_init_s *init)
         return result; // Error status code
     }
 
-    // Step 4: Disable NMEA output
+    // Disable NMEA output
     msg_size = ubx_prepare_config_cmd(dev->tx_buffer, UBX_CFG_I2C_NMEA_DISABLE, 0);
     dev->tx_size = msg_size;
 
@@ -80,9 +79,9 @@ gps_status_e max_m10s_init(max_m10s_dev_s *dev, const max_m10s_init_s *init)
     I2C_WAIT(dev);
 
     
-    // Step 5: Ensure delay time is completed
-    dev->configs.delay_blocking(1000); // 1 second delay
-    // Step 6: Check for ACK response
+    //Ensure delay time is completed
+    dev->configs.delay_blocking(1000); // 1 s delay
+    //Check for ACK response
     hal_status = GPS_RECEIVE(dev, dev->configs.device_address, dev->rx_buffer, 10); // Expecting 10 bytes for ACK response
     if (hal_status != HAL_OK) {
         return UBLOX_I2C_ERROR; // Error status code
@@ -165,6 +164,65 @@ gps_status_e max_m10s_read(max_m10s_dev_s *dev) {
         return UBLOX_I2C_ERROR;
     }
     return UBLOX_OK;
+}
+
+/**
+ * @brief Validate a received packet from the GPS device
+ * @param dev Pointer to MAX-M10S device structure
+ * @param cmd_type Type of command for which the response should be validated
+ * @return UBLOX_OK if packet is valid; else error code
+ */
+gps_status_e max_m10s_validate_response(max_m10s_dev_s *dev, gps_cmd_type_e cmd_type) {
+    // Validate parameters
+    if (dev == NULL || !dev->initialized || dev->rx_size == 0) {
+        return UBLOX_INVALID_PARAM;
+    }
+
+    // Check for minimum packet size
+    if (dev->rx_size < UBX_HEADER_LENGTH + UBX_CHECKSUM_LENGTH) {
+        return UBLOX_ERROR;
+    }
+
+    // Validate based on command type
+    switch (cmd_type) {
+        case GPS_CMD_PVT:
+            return ubx_validate_packet(dev->rx_buffer, dev->rx_size, UBX_CLASS_NAV, UBX_NAV_PVT);
+        
+        // Add cases for other command types as needed
+        
+        default:
+            return UBLOX_INVALID_PARAM;
+    }
+}
+
+
+
+gps_status_e max_m10s_config_meas_rate(max_m10s_dev_s *dev, uint16_t rate) {
+    if (dev == NULL || !dev->initialized) {
+        return UBLOX_INVALID_PARAM;
+    }
+    if(rate < 25 || rate > 1000) {
+        return UBLOX_INVALID_PARAM; // Rate must be between 25ms (40Hz) and 1000ms (1Hz)
+    }
+    uint16_t msg_size = ubx_prepare_config_cmd_u16(dev->tx_buffer, UBX_CFG_RATE_MEAS, rate);
+    dev->tx_size = msg_size;
+
+    HAL_StatusTypeDef hal_status = GPS_TRANSMIT(dev, dev->configs.device_address, dev->tx_buffer, dev->tx_size);
+    if (hal_status != HAL_OK) {
+        return UBLOX_I2C_ERROR;
+    }
+
+    I2C_WAIT(dev); 
+
+    dev->configs.delay_blocking(1000); // 1 second delay
+
+    hal_status = GPS_RECEIVE(dev, dev->configs.device_address, dev->rx_buffer, 10); // Expecting 10 bytes for ACK response
+    if (hal_status != HAL_OK) {
+        return UBLOX_I2C_ERROR; // Error status code
+    }
+    I2C_WAIT(dev);
+
+    return ubx_validate_ack(dev->rx_buffer, 10, UBX_CLASS_CFG, UBX_CFG_VALSET);
 }
 
 //************** PRIVATE FUNCTIONS **************************************/

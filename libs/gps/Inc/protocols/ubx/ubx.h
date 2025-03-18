@@ -20,9 +20,7 @@
  * - Special handling for ACK/NACK responses
  * - Helper functions for packet size calculation and frame access
  *
- * @note This implementation follows a stateless design where all state
- *       management is handled by the driver layer. The protocol layer
- *       focuses purely on packet handling.
+ * @note The protocol layer focuses purely on packet handling and processing
  *
  * @see u-blox MAX-M10 Interface Manual v5.10 for protocol details
  *      https://www.u-blox.com/en/product/max-m10-series#Documentation-&-resources
@@ -30,26 +28,46 @@
  * @author Reece Wayt
  */
 
- #pragma once
+#pragma once
 
 #include "ubx_types.h"
 #include "ubx_defs.h"
 #include "gps_types.h"
 
+// Compile time checks to ensure the ubx_frame_t structure matches the expected size and alignment
+_Static_assert(sizeof(ubx_frame_t) == MAX_BUFFER_SIZE, "UBX frame size exceeds maximum packet length");
+_Static_assert(offsetof(ubx_frame_t, sync1) == 0, "UBX frame sync1 offset is incorrect");
+_Static_assert(offsetof(ubx_frame_t, sync2) == 1, "UBX frame sync2 offset is incorrect");
+_Static_assert(offsetof(ubx_frame_t, cls) == 2, "UBX frame cls offset is incorrect");
+_Static_assert(offsetof(ubx_frame_t, id) == 3, "UBX frame id offset is incorrect");
+_Static_assert(offsetof(ubx_frame_t, len) == 4, "UBX frame len offset is incorrect");
+_Static_assert(offsetof(ubx_frame_t, payload) == 6, "UBX frame payload offset is incorrect");
+_Static_assert(offsetof(ubx_frame_t, checksumA) == 6 + UBX_MAX_PAYLOAD_LENGTH, "UBX frame checksumA offset is incorrect");
+_Static_assert(offsetof(ubx_frame_t, checksumB) == 6 + UBX_MAX_PAYLOAD_LENGTH + 1, "UBX frame checksumB offset is incorrect");
+// Ensure proper padding 
+_Static_assert(sizeof(ubx_frame_t) == 
+                    2 + // sync1 + sync2
+                    1 + // cls
+                    1 + // id
+                    2 + // len
+                    sizeof(ubx_payload_t) + // payload
+                    2,
+                    "UBX frame has unexpected padding" 
+);
  
-  /**
-   * @brief Prepares a generic UBX command in the provided buffer
-   *
-   * Creates a UBX packet for commands that don't require payload data,
-   * such as NAV_STATUS or NAV_PVT requests. The function handles sync
-   * characters, message class/ID, and checksum calculation.
-   *
-   * @param buffer Buffer where the command will be formatted
-   * @param cls UBX message class (e.g., UBX_CLASS_NAV)
-   * @param id Message ID within the class (e.g., UBX_NAV_STATUS)
-   * @return uint16_t Total size of the prepared packet in bytes, or 0 if error
-   */
-  uint16_t ubx_prepare_command(uint8_t* buffer, uint8_t cls, uint8_t id);
+/**
+ * @brief Prepares a generic UBX command in the provided buffer
+ *
+ * Creates a UBX packet for commands that don't require payload data,
+ * such as NAV_STATUS or NAV_PVT requests. The function handles sync
+ * characters, message class/ID, and checksum calculation.
+ *
+ * @param buffer Buffer where the command will be formatted
+ * @param cls UBX message class (e.g., UBX_CLASS_NAV)
+ * @param id Message ID within the class (e.g., UBX_NAV_STATUS)
+ * @return uint16_t Total size of the prepared packet in bytes, or 0 if error
+ */
+uint16_t ubx_prepare_command(uint8_t* buffer, uint8_t cls, uint8_t id);
  
   /**
    * @brief Prepares a UBX configuration command in the provided buffer
@@ -64,7 +82,14 @@
    * @param value Value to set for the configuration
    * @return uint16_t Total size of the prepared packet in bytes, or 0 if error
    */
-  uint16_t ubx_prepare_config_cmd(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t value);
+uint16_t ubx_prepare_config_cmd(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t value);
+
+/* Wrapper functions for specific value sizes */
+uint16_t ubx_prepare_config_cmd_u8(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t value);
+
+uint16_t ubx_prepare_config_cmd_u16(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint16_t value);
+
+uint16_t ubx_prepare_config_cmd_u32(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint32_t value);
  
   /**
    * @brief Validates a received UBX packet
@@ -82,10 +107,7 @@
    * @param expected_id Expected message ID
    * @return gps_status_e GPS_OK if valid, appropriate error code otherwise
    */
-  gps_status_e ubx_validate_packet(const uint8_t* buffer,
-                                  uint16_t size,
-                                  uint8_t expected_cls,
-                                  uint8_t expected_id);
+gps_status_e ubx_validate_packet(const uint8_t* buffer, uint16_t size, uint8_t expected_cls, uint8_t expected_id);
  
   /**
    * @brief Validates a received ACK/NACK response
@@ -101,7 +123,7 @@
    * @return gps_status_e GPS_OK if ACK received, GPS_ERROR_NACK if NACK received,
    *                      or other error code for invalid packets
    */
-  gps_status_e ubx_validate_ack(const uint8_t* buffer,
+gps_status_e ubx_validate_ack(const uint8_t* buffer,
                                uint16_t size,
                                uint8_t expected_cls,
                                uint8_t expected_id);
@@ -118,9 +140,9 @@
    * @param buffer Pointer to buffer containing UBX data
    * @return ubx_frame_t* Pointer to frame structure
    */
-  static inline ubx_frame_t* ubx_get_frame(uint8_t* buffer) {
-      return (ubx_frame_t*)buffer;
-  }
+static inline ubx_frame_t* ubx_get_frame(uint8_t* buffer) {
+    return (ubx_frame_t*)buffer;
+}
  
   /**
    * @brief Helper function to get total packet size for a given payload length
@@ -132,7 +154,7 @@
    * @param payload_len Length of the payload in bytes
    * @return uint16_t Total packet size in bytes
    */
-  static inline uint16_t ubx_get_packet_size(uint16_t payload_len) {
-      return UBX_HEADER_LENGTH + payload_len + UBX_CHECKSUM_LENGTH;
-  }
+static inline uint16_t ubx_get_packet_size(uint16_t payload_len) {
+    return UBX_HEADER_LENGTH + payload_len + UBX_CHECKSUM_LENGTH;
+}
  

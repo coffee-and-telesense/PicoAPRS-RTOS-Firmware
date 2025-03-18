@@ -51,8 +51,8 @@ uint16_t ubx_prepare_command(uint8_t* buffer, uint8_t cls, uint8_t id) {
 
     // After calculating checksum we need to ensure the checksum comes right after the payload
     // base adress of frame + header + payload = adress of checksum
-    frame->payload.raw[frame->len] = frame->checksumA;
-    frame->payload.raw[frame->len + 1] = frame->checksumB;  // Checksum is 2 bytes long
+    frame->payload.raw[frame->len] = checksumA;
+    frame->payload.raw[frame->len + 1] = checksumB;  // Checksum is 2 bytes long
 
     // Return total packet size
     // TODO: Maybe delete the pointer to the frame and just return the size since
@@ -60,7 +60,72 @@ uint16_t ubx_prepare_command(uint8_t* buffer, uint8_t cls, uint8_t id) {
     return UBX_HEADER_LENGTH + frame->len + UBX_CHECKSUM_LENGTH;
 }
 
+/** */
+uint16_t ubx_prepare_config_cmd_by_size(uint8_t* buffer, ubx_cfg_id_e cfg_id, const void* value_ptr, uint8_t value_size) {
+    if (!buffer || !value_ptr || value_size > 4) {
+        return 0;
+    }
 
+    ubx_frame_t* frame = (ubx_frame_t*)buffer;
+
+    // Clear frame memory to avoid garbage data
+    memset(frame, 0, sizeof(ubx_frame_t));
+
+    // Set header
+    frame->sync1 = UBX_SYNC_CHAR_1;
+    frame->sync2 = UBX_SYNC_CHAR_2;
+    frame->cls = UBX_CLASS_CFG;
+    frame->id = UBX_CFG_VALSET;
+
+    // Prepare config payload
+    uint8_t* payload = frame->payload.raw;
+    payload[0] = 0x00;  // Version
+    payload[1] = UBX_CFG_LAYER_RAM | UBX_CFG_LAYER_BBR;  // RAM + BBR
+    payload[2] = 0x00;  // Reserved
+    payload[3] = 0x00;  // Reserved
+
+    // Set Key ID (little endian)
+    payload[4] = (cfg_id >> 0)  & 0xFF;
+    payload[5] = (cfg_id >> 8)  & 0xFF;
+    payload[6] = (cfg_id >> 16) & 0xFF;
+    payload[7] = (cfg_id >> 24) & 0xFF;
+
+    // Set value with proper size (little endian)
+    memcpy(&payload[8], value_ptr, value_size);
+
+    frame->len = 8 + value_size;  // 8 bytes for header + value size
+
+    // Calculate checksum starting from class byte
+    uint8_t checksumA, checksumB;
+    calc_checksum(&frame->cls, frame->len + 4, &checksumA, &checksumB);
+
+    // Set checksum after payload
+    frame->payload.raw[frame->len] = checksumA;
+    frame->payload.raw[frame->len + 1] = checksumB;
+
+    // Return total packet size
+    return UBX_HEADER_LENGTH + frame->len + UBX_CHECKSUM_LENGTH;
+}
+
+/* Wrapper functions for specific value sizes */
+uint16_t ubx_prepare_config_cmd_u8(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t value) {
+    return ubx_prepare_config_cmd_by_size(buffer, cfg_id, &value, sizeof(uint8_t));
+}
+
+uint16_t ubx_prepare_config_cmd_u16(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint16_t value) {
+    return ubx_prepare_config_cmd_by_size(buffer, cfg_id, &value, sizeof(uint16_t));
+}
+
+uint16_t ubx_prepare_config_cmd_u32(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint32_t value) {
+    return ubx_prepare_config_cmd_by_size(buffer, cfg_id, &value, sizeof(uint32_t));
+}
+
+/* For backward compatibility consider adding this
+uint16_t ubx_prepare_config_cmd(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t value) {
+    return ubx_prepare_config_cmd_u8(buffer, cfg_id, value);
+}
+*/
+// TODO: Delete me
 uint16_t ubx_prepare_config_cmd(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t value) {
     if (!buffer) {
         return 0;

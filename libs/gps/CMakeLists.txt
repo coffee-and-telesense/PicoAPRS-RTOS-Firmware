@@ -2,9 +2,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(gps)
 
-# Create an option for NON_BLOCKING mode with a default value of OFF
-option(GPS_NON_BLOCKING "Build GPS library in non-blocking mode" ON)
-
 # Create the GPS library
 add_library(gps STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/driver/max_m10s.c

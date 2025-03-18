@@ -7,10 +7,11 @@
  *        - Message classes and IDs
  *        - Payload lengths
  *        - Communication settings
+ * @also: Symbols which aren't curretly used in the code are commented out but 
+ *        are left in the file for future reference or expansion. 
  ******************************************************************************/
 #pragma once
-#include <stdint.h>
-
+#include "gps_types.h"
 /*******************************************************************************
  * Frame Structure Constants
  ******************************************************************************/
@@ -18,7 +19,7 @@
 #define UBX_SYNC_CHAR_2         0x62    /**< Second sync character of UBX frame */
 #define UBX_HEADER_LENGTH       6       /**< Header length: 2 sync + 1 class + 1 id + 2 length */
 #define UBX_CHECKSUM_LENGTH     2       /**< Checksum length in bytes */
-#define UBX_MAX_PAYLOAD_LENGTH  256     /**< Maximum payload length (see Integration Manual p.24) */
+#define UBX_MAX_PAYLOAD_LENGTH  (MAX_BUFFER_SIZE - UBX_HEADER_LENGTH - UBX_CHECKSUM_LENGTH)     /**< Maximum payload length (see Integration Manual p.24) */
 #define UBX_MAX_PACKET_LENGTH   (UBX_HEADER_LENGTH + UBX_MAX_PAYLOAD_LENGTH + UBX_CHECKSUM_LENGTH)
 
 /* Payload Length Constants in Bytes*/
@@ -73,8 +74,3 @@
 #define UBX_CFG_LAYER_RAM    0x01
 #define UBX_CFG_LAYER_BBR    0x10
 #define UBX_CFG_LAYER_FLASH  0x20
-
-
-/* I2C Configuration */
-#define UBLOX_I2C_ADDR         (0x42 << 1)   /**< Default u-blox I2C address (shifted for R/W bit) */
-#define I2C_TIMEOUT            100           /**< I2C timeout in milliseconds */

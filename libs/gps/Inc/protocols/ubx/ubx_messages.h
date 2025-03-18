@@ -6,16 +6,6 @@
  * payloads. Each structure maps to a specific message type and contains the
  * appropriate fields as defined in the u-blox interface manual.
  *
- *
- * Frame Structure (see page 41 of interface manual):
- * +-------+-------+-------+-----+--------+---------+-------+-------+
- * | SYNC1 | SYNC2 | CLASS | ID  | LENGTH | PAYLOAD | CK_A  | CK_B  |
- * | 0xB5  | 0x62  |  1B   | 1B  |   2B   |   NB    |  1B   |  1B   |
- * +-------+-------+-------+-----+--------+---------+-------+-------+
- *
- * Total frame size  6 + N + 2 bytes (where N is payload length)
- * Checksum is calculated over the range: CLASS to PAYLOAD (inclusive)
- *
  * @important: The last declaration of this file is a union that allows for easy
  *            access to different types of payload structues using the same memory.
  *

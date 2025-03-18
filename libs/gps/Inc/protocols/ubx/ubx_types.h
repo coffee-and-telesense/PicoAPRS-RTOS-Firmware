@@ -25,7 +25,7 @@ typedef union __attribute__((packed)) {
     ubx_nav_status_s nav_status;
     ubx_nav_pvt_s nav_pvt;
     ubx_ack_ack_s ack_ack;
-    uint8_t raw[256];
+    uint8_t raw[UBX_MAX_PAYLOAD_LENGTH]; // Raw payload for generic handling
 } ubx_payload_t;
 
 // Basic UBX packet structure - only contains frame-specific fields
@@ -41,7 +41,8 @@ typedef struct __attribute__((packed)) {
 
 
 typedef enum {
-    UBX_CFG_I2C_UBX_ENABLE = 0x10720001,    // CFG-I2COUTPROT-UBX
-    UBX_CFG_I2C_NMEA_DISABLE = 0x10720002,  // CFG-I2COUTPROT-NMEA
+    UBX_CFG_I2C_UBX_ENABLE =    0x10720001,   // CFG-I2COUTPROT-UBX
+    UBX_CFG_I2C_NMEA_DISABLE =  0x10720002,   // CFG-I2COUTPROT-NMEA
+    UBX_CFG_RATE_MEAS =         0x30210001,   // CFG-RATE-MEAS
     // Add other config IDs as needed
 } ubx_cfg_id_e;

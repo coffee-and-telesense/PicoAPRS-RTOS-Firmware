@@ -13,7 +13,7 @@
 
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 
-static void print_status(const char* message, status_t status);
+static void print_status(const char* message, gps_status_e status);
 
 // Function prototypes
 void gps_demo_run(void);
@@ -49,6 +49,7 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
+    Error_Handler(); 
     // This code won't be reached as gps_demo_run has its own infinite loop
   }
 }
@@ -83,13 +84,24 @@ void gps_demo_run(void) {
   print_status("GPS initialization", status);
    
 
-  if (status == UBLOX_OK) { // Success status
-    printf("GPS device initialized successfully!\r\n");
-    printf("GPS configuration completed. Device is in UBX protocol mode.\r\n");
-  } else {
+  if(status != UBLOX_OK) {
     printf("GPS initialization failed with status: 0x%02X\r\n", status);
     return;
   }
+  printf("GPS device initialized successfully\r\n");
+
+  printf("Configuring measurement rate...\r\n");
+  // Configure measurement rate to 10 Hz (100ms)
+  status = max_m10s_config_meas_rate(&gps_dev, 100);
+  print_status("Configuring measurement rate", status);
+  if(status != UBLOX_OK) {
+    printf("Failed to configure measurement rate with status: 0x%02X\r\n", status);
+    return;
+  }
+  printf("Measurement rate configured successfully\r\n");
+
+  
+
    
   // Main application loop
   printf("Entering main loop...\r\n");
@@ -136,6 +148,9 @@ void gps_demo_run(void) {
         print_status("I2C wait", wait_status);
       #endif
       
+      // Validate the received data
+      status = max_m10s_validate_response(&gps_dev, GPS_CMD_PVT);
+      
       if (status == UBLOX_OK) {
         printf("PVT data received. First few bytes of response: ");
         // Print the first 8 bytes of the received data for verification
@@ -154,7 +169,7 @@ void gps_demo_run(void) {
   }
 }
 
-static void print_status(const char* message, status_t status)
+static void print_status(const char* message, gps_status_e status)
 {
   const char* status_str;
   
@@ -182,7 +197,7 @@ static void print_status(const char* message, status_t status)
       break;
   }
   
-  printf("%s: %s (0x%02lX)\r\n", message, status_str, status);
+  printf("%s: %s (0x%02X)\r\n", message, status_str, status);
 }
 
 // Redirect printf to UART
@@ -190,3 +205,23 @@ PUTCHAR_PROTOTYPE {
     HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
     return ch;
 }
+
+#ifdef NON_BLOCKING
+// Callback functions for non-blocking I2C
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  (void)hi2c; // Unused parameter
+  printf("HAL_I2C_MasterTxCpltCallback called\r\n");
+  // This function is called when the Master Transmit completes
+  // You can set a flag here to indicate completion but no flags are needed for this example
+}
+
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  (void)hi2c; // Unused parameter
+  printf("HAL_I2C_MasterRxCpltCallback called\r\n");
+  // This function is called when the Master Receive completes
+  // You can set a flag here to indicate completion
+  // You can set a flag here to indicate completion but no flags are needed for this example
+}
+#endif

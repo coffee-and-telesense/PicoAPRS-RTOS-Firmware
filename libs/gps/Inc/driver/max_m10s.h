@@ -3,7 +3,18 @@
  * @file max_m10s.h
  * @brief Driver for the MAX-M10 GPS module intended for use as a GPS beacon.
  *        Configurations and API calls are minimized to limit the scope of the driver
- *        to the basic functionality required for the Pico Balloon project.
+ *        to the basic functionality required for the Pico Balloon project. Driver can 
+ *        be ran in both  blocking and non-blocking modes depending on the configuration.
+ *        Non-blocking mode is enabled by defining the NON_BLOCKING macro.
+ * 
+ * @note In non-blocking mode the application needs to consider special care for synchronization
+ *      and timing of the I2C operations. The driver will not handle any synchronization. In blocking 
+ *      mode, the application only needs to consider the time delay between writing to the GPS 
+ *      and reading from it.         
+ * 
+ * @todo 
+ *      - Consider adding HAL abstraction layer to prevent external dependencies.
+ *      - Power saving features need to be added. See pg. 36 of integration manual.
  */
 #include <stdint.h>
 #include "gps_types.h"
@@ -14,9 +25,6 @@
 //=============================================================================
 // Type definitions
 //=============================================================================
-
-// Generic status return type (0 = OK, Otherwise = Error)
-typedef uint32_t status_t;
 
 // Function pointer for blocking delay
 typedef void (*delay_blocking_fn)(uint32_t delay);
@@ -44,7 +52,7 @@ typedef void (*delay_blocking_fn)(uint32_t delay);
  *     .hi2c = &hi2c1,
  *     .device_address = 0x42,
  *     .timeout_ms = 1000,
- *     .delay_blocking = HAL_Delay,
+ *     .delay_blocking = HAL_Delay,  // if using rtos use OS Delay metho instead
  *     #ifdef NON_BLOCKING
  *       .transmit = HAL_I2C_Master_Transmit_IT,
  *       .receive = HAL_I2C_Master_Receive_IT,
@@ -72,8 +80,8 @@ typedef struct {
     uint8_t initialized;
     gps_cmd_type_e current_cmd;     // Current command being executed
     max_m10s_init_s configs;
-    uint8_t tx_buffer[256];
-    uint8_t rx_buffer[256];
+    uint8_t tx_buffer[MAX_BUFFER_SIZE];         // TODO: Determine actual size needed
+    uint8_t rx_buffer[MAX_BUFFER_SIZE];         // TODO: Determine actual size needed
     uint16_t tx_size;
     uint16_t rx_size;
 } max_m10s_dev_s;
@@ -115,7 +123,9 @@ typedef struct {
 //=============================================================================
 
 /**
- * @brief Initialize the MAX-M10S GPS driver
+ * @brief Initialize the MAX-M10S GPS driver with minimal configuration
+ *          - Sets UBX protocol to I2C Output
+ *          - Turns of NMEA output
  * @param dev Pointer to device structure to initialize
  * @param init Pointer to initialization configuration
  * @return Status code (UBLOX_OK on success)
@@ -132,7 +142,25 @@ gps_status_e max_m10s_command(max_m10s_dev_s *dev, gps_cmd_type_e cmd_type);
 
 /**
  * @brief Read data from the GPS device
- * @param dev Pointer to MAX-M10S device structure
+ * @param dev: Pointer to MAX-M10S device structure
  * @return UBLOX_OK if read initiated successfully; else error code
  */
 gps_status_e max_m10s_read(max_m10s_dev_s *dev);
+
+/**
+ * @brief Validate a received packet from the GPS device
+ * @param dev: Pointer to MAX-M10S device structure
+ * @param cmd_type: Type of command for which the response should be validated
+ * @return UBLOX_OK if packet is valid; else error code
+ */
+gps_status_e max_m10s_validate_response(max_m10s_dev_s *dev, gps_cmd_type_e cmd_type);
+
+
+/**
+ * @brief Configs the measurement rate of the MAX-M10S GPS device
+ * 
+ * @param dev: Pointer to MAX-M10S device structure
+ * @param rate: Measurement rate in ms (1000ms = 1Hz), (100ms = 10Hz) 
+ * @return gps_status_e 
+ */
+gps_status_e max_m10s_config_meas_rate(max_m10s_dev_s *dev, uint16_t rate);

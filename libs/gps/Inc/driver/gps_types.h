@@ -1,5 +1,7 @@
 #pragma once
 
+
+#define MAX_BUFFER_SIZE 128
 typedef enum {
     UBLOX_OK = 0x00,             // Operation successful
     UBLOX_ERROR = 0x01,          // General error
