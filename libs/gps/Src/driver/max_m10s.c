@@ -35,7 +35,7 @@ gps_status_e max_m10s_init(max_m10s_dev_s *dev, const max_m10s_init_s *init)
     dev->rx_size = 0;
     
     // Initialize UBX protocol for I2C communication
-    msg_size = ubx_prepare_config_cmd(dev->tx_buffer, UBX_CFG_I2C_UBX_ENABLE, 1);
+    msg_size = ubx_prepare_config_cmd_u8(dev->tx_buffer, UBX_CFG_I2C_UBX_ENABLE, (uint8_t) 1);
     dev->tx_size = msg_size;
 
     HAL_StatusTypeDef hal_status;
@@ -66,7 +66,7 @@ gps_status_e max_m10s_init(max_m10s_dev_s *dev, const max_m10s_init_s *init)
     }
 
     // Disable NMEA output
-    msg_size = ubx_prepare_config_cmd(dev->tx_buffer, UBX_CFG_I2C_NMEA_DISABLE, 0);
+    msg_size = ubx_prepare_config_cmd_u8(dev->tx_buffer, UBX_CFG_I2C_NMEA_DISABLE, (uint8_t) 0);
     dev->tx_size = msg_size;
 
     hal_status = GPS_TRANSMIT(dev, dev->configs.device_address, dev->tx_buffer, dev->tx_size);

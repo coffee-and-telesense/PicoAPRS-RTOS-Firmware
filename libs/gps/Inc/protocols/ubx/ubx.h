@@ -69,19 +69,20 @@ _Static_assert(sizeof(ubx_frame_t) ==
  */
 uint16_t ubx_prepare_command(uint8_t* buffer, uint8_t cls, uint8_t id);
  
-  /**
-   * @brief Prepares a UBX configuration command in the provided buffer
-   *
-   * Creates a UBX-CFG-VALSET packet to configure module settings. This is
-   * used for settings like enabling UBX protocol or disabling NMEA output.
-   * The function handles all packet formatting including the configuration
-   * payload structure.
-   *
-   * @param buffer Buffer where the command will be formatted
-   * @param cfg_id Configuration item ID to set
-   * @param value Value to set for the configuration
-   * @return uint16_t Total size of the prepared packet in bytes, or 0 if error
-   */
+/**
+ * @brief Prepares a UBX configuration command in the provided buffer
+ *
+ * Creates a UBX-CFG-VALSET packet to configure module settings. This is
+ * used for settings like enabling UBX protocol or disabling NMEA output.
+ * The function handles all packet formatting including the configuration
+ * payload structure.
+ *
+ * @param buffer Buffer where the command will be formatted
+ * @param cfg_id Configuration item ID to set
+ * @param value Value to set for the configuration
+ * @return uint16_t Total size of the prepared packet in bytes, or 0 if error
+ */
+__attribute__((deprecated("Use ubx_prepare_config_cmd_u*() methods instead")))
 uint16_t ubx_prepare_config_cmd(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t value);
 
 /* Wrapper functions for specific value sizes */

@@ -55,8 +55,6 @@ uint16_t ubx_prepare_command(uint8_t* buffer, uint8_t cls, uint8_t id) {
     frame->payload.raw[frame->len + 1] = checksumB;  // Checksum is 2 bytes long
 
     // Return total packet size
-    // TODO: Maybe delete the pointer to the frame and just return the size since
-    // this will always be the same size
     return UBX_HEADER_LENGTH + frame->len + UBX_CHECKSUM_LENGTH;
 }
 
@@ -120,12 +118,8 @@ uint16_t ubx_prepare_config_cmd_u32(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint32
     return ubx_prepare_config_cmd_by_size(buffer, cfg_id, &value, sizeof(uint32_t));
 }
 
-/* For backward compatibility consider adding this
-uint16_t ubx_prepare_config_cmd(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t value) {
-    return ubx_prepare_config_cmd_u8(buffer, cfg_id, value);
-}
-*/
-// TODO: Delete me
+
+// Method is deprecated but keeping for now. 
 uint16_t ubx_prepare_config_cmd(uint8_t* buffer, ubx_cfg_id_e cfg_id, uint8_t value) {
     if (!buffer) {
         return 0;
