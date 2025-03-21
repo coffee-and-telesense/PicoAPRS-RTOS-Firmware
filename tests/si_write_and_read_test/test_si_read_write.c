@@ -1,4 +1,16 @@
-// In main.c
+/**
+ * @file test_si_read_write.c
+ * @brief
+ *      This file contains a test/example code for initializing the SI4463 device, and reading/
+ *      writing to its FIFO. It uses SPI communication to interact with the device. 
+ * @note 
+ *     This code is intended for preliminary testing and demonstration purposes only. It doesn't demonstrate 
+ *     any specific functionality of the SI4463. 
+ * 
+ * @date 2025-03-21
+ * 
+ */
+
 #include "main.h"
 #include "usart.h"
 #include "gpio.h"
@@ -25,16 +37,15 @@ typedef struct {
     uint8_t txFifoSpace; // Number of bytes available in TX FIFO (when empty this is 64 bytes)
 } Si4463_FifoInfo;
 
-// Declare extern private functions from CubeMX
+// Declare extern privates from CubeMX
 extern void SystemClock_Config(void);
-
-// Global variables
 extern SPI_HandleTypeDef hspi1;
 extern UART_HandleTypeDef huart2;
 
-// Function prototypes
-void Si4463_CS_Low(void);
-void Si4463_CS_High(void);
+// Software Chip Select Macros
+#define SI4463_CS_LOW() HAL_GPIO_WritePin(SI4463_CS_PORT, SI4463_CS_PIN, GPIO_PIN_RESET)
+#define SI4463_CS_HIGH() HAL_GPIO_WritePin(SI4463_CS_PORT, SI4463_CS_PIN, GPIO_PIN_SET)
+
 HAL_StatusTypeDef Si4463_SendCommand(uint8_t cmd, uint8_t *data, uint8_t len);
 HAL_StatusTypeDef Si4463_ReadCommandResponse(uint8_t *response, uint8_t len);
 HAL_StatusTypeDef Si4463_WaitForCTS(uint16_t timeout);
@@ -59,7 +70,7 @@ int main(void)
   printf("Si4463 Initialization Starting...\r\n");
   
   // Make sure CS is initially high (deselected)
-  Si4463_CS_High();
+  SI4463_CS_HIGH();
   
   // Small delay after power on
   HAL_Delay(20);
@@ -73,7 +84,8 @@ int main(void)
     if (Si4463_PowerUp() == HAL_OK) {
       printf("Si4463 Power Up command sent successfully\r\n");
       
-      // Wait for Power-up to complete (CTS goes high again)
+      // Wait for Power-up to complete (CTS will signal if the device is ready)
+      // Note we are polling CTS here, but in a real application you might want to use an interrupt on a GPIO pin
       if (Si4463_WaitForCTS(1000) == HAL_OK) {
         printf("Power-up completed successfully\r\n");
         printf("\n---- Testing FIFO Operations ---\n");
@@ -120,9 +132,9 @@ uint8_t Si4463_CheckCTS(void)
     uint8_t tx_buffer[2] = {CMD_READ_CMD_BUFF, 0x00}; // Command and NOP byte
     uint8_t rx_buffer[2] = {0, 0};
     
-    Si4463_CS_Low();
+    SI4463_CS_LOW();
     status = HAL_SPI_TransmitReceive(&hspi1, tx_buffer, rx_buffer, 2, 100);
-    Si4463_CS_High();
+    SI4463_CS_HIGH();
     
     if (status != HAL_OK) {
         return 0;  // Error in communication
@@ -168,9 +180,9 @@ HAL_StatusTypeDef Si4463_SendCommand(uint8_t cmd, uint8_t *data, uint8_t len)
         memcpy(&tx_buffer[1], data, len);
     }
     
-    Si4463_CS_Low();
+    SI4463_CS_LOW();
     status = HAL_SPI_Transmit(&hspi1, tx_buffer, len + 1, 100);
-    Si4463_CS_High();
+    SI4463_CS_HIGH();
     
     return status;
 }
@@ -185,12 +197,11 @@ HAL_StatusTypeDef Si4463_ReadCommandResponse(uint8_t *response, uint8_t len)
     // First byte should be CMD_READ_CMD_BUFF
     tx_buffer[0] = CMD_READ_CMD_BUFF;
     
-    Si4463_CS_Low();
-    
+    SI4463_CS_LOW();
     // Send READ_CMD_BUFF command and receive response in a single transaction
     status = HAL_SPI_TransmitReceive(&hspi1, tx_buffer, rx_buffer, len + 1, 100);
-    
-    Si4463_CS_High();
+
+    SI4463_CS_HIGH();
     
     if (status != HAL_OK) {
         return status;
@@ -267,13 +278,9 @@ HAL_StatusTypeDef Si4463_GetFifoInfo(Si4463_FifoInfo *fifoInfo, uint8_t resetFla
 // Function to write data to the TX FIFO
 HAL_StatusTypeDef Si4463_WriteTxFifo(uint8_t *data, uint8_t len)
 {
-    // According to the documentation, WRITE_TX_FIFO doesn't need CTS check
-    // and doesn't have a response
-    
     HAL_StatusTypeDef status;
     uint8_t tx_buffer[64];  // Adjust size as needed
     
-    // Prepare command and data
     tx_buffer[0] = CMD_WRITE_TX_FIFO;
     
     if (data != NULL && len > 0) {
@@ -281,10 +288,11 @@ HAL_StatusTypeDef Si4463_WriteTxFifo(uint8_t *data, uint8_t len)
     } else {
         return HAL_ERROR;  // No data to write
     }
-    
-    Si4463_CS_Low();
+
+    SI4463_CS_LOW();
+    // len + 1 for the command byte
     status = HAL_SPI_Transmit(&hspi1, tx_buffer, len + 1, 100);
-    Si4463_CS_High();
+    SI4463_CS_HIGH();
     
     return status;
 }
@@ -295,60 +303,58 @@ void TestFifoOperations(void)
     Si4463_FifoInfo fifoInfo;
     HAL_StatusTypeDef status;
     
-    // 1. First, read initial FIFO info
-    printf("Reading initial FIFO information...\r\n");
+    status = Si4463_GetFifoInfo(&fifoInfo, FIFO_INFO_RX_RESET | FIFO_INFO_TX_RESET);  // Clear FIFOs
     
-    status = Si4463_GetFifoInfo(&fifoInfo, FIFO_INFO_RX_RESET | FIFO_INFO_TX_RESET);  // Reset everything
-    
-    if (status == HAL_OK) {
-        printf("Initial FIFO Info read success!\r\n");
-        printf("Initial RX FIFO Count: %d bytes\r\n", fifoInfo.rxFifoCount);
-        printf("Initial TX FIFO Space: %d bytes\r\n", fifoInfo.txFifoSpace);
-    } else {
-        printf("Failed to read initial FIFO information\r\n");
+    if(status != HAL_OK) {
+        printf("Failed to read FIFO information\r\n");
         return;
     }
-    
-    //status = Si4463_GetFifoInfo(&fifoInfo, FIFO_INFO_RX_RESET | FIFO_INFO_TX_RESET);
-    // wait for CTS
+
+    // Validate the response ( RX_FIFO_COUNT == 0 and TX_FIFO_SPACE == 0x40 (64 bytes))
+    uint8_t fifo_valid = (fifoInfo.rxFifoCount == 0 && fifoInfo.txFifoSpace == 0x40) ? 1 : 0;
+    if (fifo_valid) {
+        printf("Initial FIFO Info is valid!\r\n");
+    } else {
+        printf("Initial FIFO Info is NOT valid!\r\n");
+        printf("RX_FIFO_COUNT: %d, TX_FIFO_SPACE: %d\r\n", fifoInfo.rxFifoCount, fifoInfo.txFifoSpace);
+        return;
+    }
+
     if(Si4463_WaitForCTS(1000) != HAL_OK) {
         printf("Timeout waiting for CTS after FIFO_INFO command\r\n");
         return;
     }
-    // Write some test data to TX FIFO
-    printf("\nWriting test data to TX FIFO...\r\n");
     
-    // Test data payload - 5 bytes
+    // Write some test data to the TX FIFO
     uint8_t testData[3] = {0x06, 0x10, 0xF3};
     
     status = Si4463_WriteTxFifo(testData, sizeof(testData));
     
-    if (status == HAL_OK) {
-        printf("Successfully wrote %d bytes to TX FIFO\r\n", sizeof(testData));
-    } else {
+    if(status != HAL_OK) {
         printf("Failed to write to TX FIFO\r\n");
         return;
     }
     
-    // Wait for CTS after writing to TX FIFO
     if(Si4463_WaitForCTS(1000) != HAL_OK) {
         printf("Timeout waiting for CTS after writing to TX FIFO\r\n");
         return;
     }
-    // 4. Read FIFO info again to check if TX space decreased
-    printf("\nReading FIFO information after writing to TX FIFO...\r\n");
     
     status = Si4463_GetFifoInfo(&fifoInfo, 0x00);  // No reset
-    
-    if (status == HAL_OK) {
-        printf("FIFO Info read success!\r\n");
-        printf("After writing - RX FIFO Count: %d bytes\r\n", fifoInfo.rxFifoCount);
-        printf("After writing - TX FIFO Space: %d bytes\r\n", fifoInfo.txFifoSpace);
-        
-        // Verify the TX FIFO space has decreased by the amount of data we wrote
-        int expectedSpace = fifoInfo.txFifoSpace + sizeof(testData);
-        printf("Expected TX FIFO Space if no data was written: around %d bytes\r\n", expectedSpace);
-    } else {
+
+    if(status != HAL_OK) {
         printf("Failed to read FIFO information after writing\r\n");
+        return;
     }
+    uint8_t expect_tx_fifo_space = 64 - sizeof(testData); 
+    uint8_t fifo_valid_after_write = (fifoInfo.rxFifoCount == 0 && fifoInfo.txFifoSpace == expect_tx_fifo_space) ? 1 : 0;
+
+    if (fifo_valid_after_write) {
+        printf("FIFO Info after writing is valid!\r\n");
+    } else {
+        printf("FIFO Info after writing is NOT valid!\r\n");
+        printf("RX_FIFO_COUNT: %d, TX_FIFO_SPACE: %d\r\n", fifoInfo.rxFifoCount, fifoInfo.txFifoSpace);
+        return;
+    }
+
 }
