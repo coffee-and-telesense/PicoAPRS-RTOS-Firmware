@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "app_threadx.h"
 #include "main.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
