@@ -14,3 +14,6 @@ add_subdirectory(CubeMX/cmake/stm32cubemx)
 
 # Add your test app
 add_subdirectory(apps/uart_echo_app)
+
+# Add tests
+add_subdirectory(tests/si_write_and_read_configs_test)
