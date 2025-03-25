@@ -27,6 +27,7 @@ target_include_directories(stm32cubemx INTERFACE
 target_sources(stm32cubemx INTERFACE
     ../../Src/main.c
     ../../Src/gpio.c
+    ../../Src/spi.c
     ../../Src/i2c.c
     ../../Src/app_threadx.c
     ../../Src/app_azure_rtos.c
@@ -49,6 +50,8 @@ target_sources(stm32cubemx INTERFACE
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_pwr_ex.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_exti.c
+    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_spi.c
+    ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_spi_ex.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_i2c.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_hal_i2c_ex.c
     ../../Drivers/STM32U0xx_HAL_Driver/Src/stm32u0xx_ll_i2c.c

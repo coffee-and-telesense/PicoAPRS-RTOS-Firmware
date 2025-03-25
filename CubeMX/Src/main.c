@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "app_threadx.h"
 #include "main.h"
+#include "spi.h"
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
