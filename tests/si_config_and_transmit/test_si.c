@@ -48,8 +48,9 @@ int main(void) {
     /* Infinite loop */
     while (1)
     {
-        /* This should never be reached */
-        Error_Handler();
+        /* Main loop can be used for other tasks */
+        HAL_Delay(1000);  // Just a delay for demonstration
+        HAL_GPIO_TogglePin(User_LED_GPIO_Port, User_LED_Pin);  // Toggle LED
     }
 }
  
