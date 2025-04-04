@@ -1,4 +1,19 @@
 
+/**
+ * @file aprs.c
+ * @brief Implementation of APRS frame generation functions.
+ *
+ * This file contains the implementation of functions to initialize, update, and concatenate
+ * various APRS frame types, including telemetry, parameter, unit, message, and position frames.
+ * It also includes functions to print the members of these structures for debugging purposes.
+ *
+ * @date 2023-10-01
+ * @author Arie Jorritsma
+ */
+
+
+
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -206,7 +221,6 @@ telemetryParamFrame *initParamFrame(void)
  * 
  * @note The caller should ensure that the analog and digital values are valid and null-terminated.
  */
-
 void updateTelemParamData(telemetryParamFrame *tParamFrame, char *A1, char *A2, char *A3, char *A4, char *A5, char *B1, char *B2, char *B3, char *B4, char *B5, char *B6, char *B7, char *B8)
 {
     char *analog[] = {tParamFrame->A1, tParamFrame->A2, tParamFrame->A3, tParamFrame->A4, tParamFrame->A5};
@@ -243,7 +257,6 @@ void updateTelemParamData(telemetryParamFrame *tParamFrame, char *A1, char *A2, 
  * 
  * @note The caller is responsible for freeing the memory allocated for the concatenated parameter data.
  */
-
 void concatParamData(telemetryParamFrame *tParamFrame)
 {
     uint8_t *paramData = (uint8_t *)malloc((sizeof(uint8_t) * tParamFrame->paramFrameSize + 1));
@@ -345,7 +358,6 @@ telemetryUnitFrame *initUnitFrame(void)
  * 
  * @note The caller should ensure that the analog and digital values are valid and null-terminated.
  */
-
 void updateTelemUnitData(telemetryUnitFrame *tUnitFrame, char *A1, char *A2, char *A3, char *A4, char *A5, char *B1, char *B2, char *B3, char *B4, char *B5, char *B6, char *B7, char *B8){
 
 
@@ -387,9 +399,6 @@ char *analogU[] = {tUnitFrame->AU1, tUnitFrame->AU2, tUnitFrame->AU3, tUnitFrame
  * 
  * @note The caller is responsible for freeing the memory allocated for the concatenated unit data.
  */
-
-
-
 void concatUnitData(telemetryUnitFrame *tUnitFrame)
 {
     uint8_t *unitData = (uint8_t *)malloc((sizeof(uint8_t) * tUnitFrame->unitFrameSize + 1));
@@ -418,13 +427,18 @@ void concatUnitData(telemetryUnitFrame *tUnitFrame)
 }
 
 
-
-
-
-
-
-
-
+/**
+ * @brief Initializes a messageFrame structure with default values.
+ *
+ * This function dynamically allocates memory for a messageFrame structure and 
+ * initializes its fields to default values. The `typeIdentifier` is set to ':', 
+ * the `addressee` array is zeroed out, and the `endOfHeader` is set to ':'.
+ *
+ * @return A pointer to the initialized messageFrame structure if memory allocation 
+ *         is successful, or NULL if memory allocation fails.
+ * 
+ * @note The caller is responsible for freeing the memory allocated for the messageFrame.
+ */
 messageFrame *initMFrame(void)
 {
     messageFrame *mFrame = (messageFrame *)malloc(sizeof(messageFrame));
@@ -444,11 +458,20 @@ messageFrame *initMFrame(void)
     return mFrame;
 }
 
-
-
-
-
-
+/**
+ * @brief Updates the messageFrame with new data.
+ *
+ * This function updates the fields of the provided messageFrame structure with new 
+ * values for the addressee and message. The provided message is copied into the 
+ * `message` field of the structure, and the `messageSize` is calculated based on 
+ * the length of the message.
+ *
+ * @param mFrame A pointer to the messageFrame structure that will be updated.
+ * @param addressee A pointer to the new addressee string to be stored in the frame.
+ * @param message A pointer to the new message string to be stored in the frame.
+ * 
+ * @note The caller should ensure that the addressee and message strings are valid and null-terminated.
+ */
 void updateMessageData(messageFrame *mFrame, char *addressee, char *message)
 {
     strcpy(mFrame->addressee, addressee);
@@ -463,13 +486,18 @@ void updateMessageData(messageFrame *mFrame, char *addressee, char *message)
 }
 
 
-
-
-
-
-
-
-
+/**
+ * @brief Concatenates the message data into a single buffer.
+ *
+ * This function concatenates the message data fields of the provided messageFrame 
+ * structure into a single buffer. The buffer is allocated dynamically to accommodate the 
+ * concatenated data. The concatenated data buffer is assigned to the `messageFrame` field of 
+ * the structure.
+ *
+ * @param mFrame A pointer to the messageFrame structure containing the message data.
+ * 
+ * @note The caller is responsible for freeing the memory allocated for the concatenated message data.
+ */
 void concatMessageData(messageFrame *mFrame)
 {
     uint8_t *messageData = (uint8_t *)malloc((sizeof(uint8_t) * mFrame->messageSize + 1));
@@ -489,13 +517,18 @@ void concatMessageData(messageFrame *mFrame)
     return;
 }
 
-
-
-
-
-
-
-
+/**
+ * @brief Initializes a positionFrame structure with default values.
+ *
+ * This function dynamically allocates memory for a positionFrame structure and 
+ * initializes its fields to default values. The `capability` is set to '/', 
+ * the `tableID` is set to '/', and the `SymCode` is set to 'O'.
+ *
+ * @return A pointer to the initialized positionFrame structure if memory allocation 
+ *         is successful, or NULL if memory allocation fails.
+ * 
+ * @note The caller is responsible for freeing the memory allocated for the positionFrame.
+ */
 positionFrame *initPFrame(void)
 {
     positionFrame *pFrame = (positionFrame *)malloc(sizeof(positionFrame));
@@ -517,6 +550,23 @@ positionFrame *initPFrame(void)
     return pFrame; 
 }
 
+
+/**
+ * @brief Updates the positionFrame with new data.
+ *
+ * This function updates the fields of the provided positionFrame structure with new 
+ * values for the time, latitude, longitude, and comment. The provided comment is 
+ * assigned to the `comment` field of the structure, and the `commentSize` is calculated 
+ * based on the length of the comment.
+ *
+ * @param pFrame A pointer to the positionFrame structure that will be updated.
+ * @param time A pointer to the new time string to be stored in the frame.
+ * @param lat A pointer to the new latitude string to be stored in the frame.
+ * @param lon A pointer to the new longitude string to be stored in the frame.
+ * @param comment A pointer to the new comment string to be stored in the frame.
+ * 
+ * @note The caller should ensure that the time, latitude, longitude, and comment strings are valid and null-terminated.
+ */
 void updatePositionData(positionFrame *pFrame, char *time, char *lat, char *lon, char *comment)
 {
     strcpy(pFrame->time, time);
@@ -538,6 +588,18 @@ void updatePositionData(positionFrame *pFrame, char *time, char *lat, char *lon,
     printPFrameStructMembers(pFrame);
 }
 
+/**
+ * @brief Concatenates the position data into a single buffer.
+ *
+ * This function concatenates the position data fields of the provided positionFrame 
+ * structure into a single buffer. The buffer is allocated dynamically to accommodate the 
+ * concatenated data. The concatenated data buffer is assigned to the `positionFrame` field of 
+ * the structure.
+ *
+ * @param pFrame A pointer to the positionFrame structure containing the position data.
+ * 
+ * @note The caller is responsible for freeing the memory allocated for the concatenated position data.
+ */
 void concatPositionData(positionFrame *pFrame)
 {
     uint8_t *positionData = (uint8_t *)malloc((sizeof(uint8_t) * pFrame->positionFrameSize  + 1));
@@ -559,7 +621,11 @@ void concatPositionData(positionFrame *pFrame)
     return;
 }
 
-
+/**
+ * @brief Prints the members of the positionFrame structure.
+ * 
+ * @param pFrame A pointer to the positionFrame structure to be printed.
+ */
 void printPFrameStructMembers(positionFrame *pFrame)
 {
     printf("Capability: %c\n", pFrame->capability);
@@ -572,6 +638,11 @@ void printPFrameStructMembers(positionFrame *pFrame)
     printf("Comment Size: %ld\n", pFrame->commentSize);
 }
 
+/**
+ * @brief Prints the members of the messageFrame structure.
+ * 
+ * @param mFrame A pointer to the messageFrame structure to be printed.
+ */
 void printMFrameStructMembers(messageFrame *mFrame)
 {
     printf("Type Identifier: %c\n", mFrame->typeIdentifier);
@@ -581,6 +652,11 @@ void printMFrameStructMembers(messageFrame *mFrame)
     printf("Message Size: %ld\n", mFrame->messageSize);
 }
 
+/**
+ * @brief Prints the members of the telemetryInfoFrame structure.
+ * 
+ * @param tFrame A pointer to the telemetryInfoFrame structure to be printed.
+ */
 void printTFrameStructMembers(telemetryInfoFrame *tFrame)
 {
 
@@ -598,6 +674,11 @@ void printTFrameStructMembers(telemetryInfoFrame *tFrame)
     printf("Telemetry Data Size: %ld\n", tFrame->tDataSize);
 }
 
+/**
+ * @brief Prints the members of the telemetryParamFrame structure.
+ * 
+ * @param tParamFrame A pointer to the telemetryParamFrame structure to be printed.
+ */
 void printParamFrameStructMembers(telemetryParamFrame *tParamFrame)
 {
     printf("Type Identifier: %.5s\n", tParamFrame->typeIdentifier);
@@ -617,6 +698,11 @@ void printParamFrameStructMembers(telemetryParamFrame *tParamFrame)
     printf("Param Frame Size: %ld\n", tParamFrame->paramFrameSize);
 }
 
+/**
+ * @brief Prints the members of the telemetryUnitFrame structure.
+ * 
+ * @param tUnitFrame A pointer to the telemetryUnitFrame structure to be printed.
+ */
 void printUnitFrameStructMembers(telemetryUnitFrame *tUnitFrame) {
 
     printf("Type Identifier: %.5s\n", tUnitFrame->typeIdentifier);

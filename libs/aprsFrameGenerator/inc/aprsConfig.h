@@ -1,4 +1,13 @@
-// aprsConfig.h
+/**
+ * @file aprsConfig.h
+ * @brief APRS Configuration Header File
+ *
+ * This header file contains user-configurable definitions for APRS telemetry channels.
+ * It allows customization of analog and digital channel names and units.
+ *
+ * @author Arie Jorritsma 
+ * @date September 2025
+ */
 
 #ifndef APRSCONFIG_H
 #define APRSCONFIG_H

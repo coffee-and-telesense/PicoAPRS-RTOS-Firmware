@@ -1,3 +1,16 @@
+
+/**
+ * @file aprs.h
+ * @brief APRS Frame Processing Library
+ *
+ * This library provides structures and functions for handling APRS telemetry,
+ * messages, and position reports. It supports frame construction and data
+ * management for APRS communications.
+ *
+ * @author Arie Jorritsma 
+ * @date September 2024
+ */
+
 #ifndef APRS_H
 #define APRS_H
 

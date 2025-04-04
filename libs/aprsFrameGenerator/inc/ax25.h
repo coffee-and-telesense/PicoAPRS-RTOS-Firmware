@@ -1,15 +1,24 @@
+/**
+ * @file ax25.h
+ * @brief AX.25 Frame Processing Library
+ *
+ * This library provides functions for creating, processing, and encoding
+ * AX.25 frames for APRS communication. It supports bit-stuffing, CRC
+ * generation, and NRZI encoding.
+ *
+ * @note The CALL, DEST, and SSID definitions should be moved to aprsConfig.h.
+ *
+ * @author Arie Jorritsma 
+ * @date September 2024
+ */
+
+
 #ifndef AX25_H
 #define AX25_H
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-
-/*
-*
-* todo : Remove the CALL and DEST and SIID defines and move to 
-* aprsConfig.h
-*/
 
 
 //#define BIT_STREAM_LEN 256
