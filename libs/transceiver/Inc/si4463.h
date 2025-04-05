@@ -8,6 +8,9 @@
 #include <string.h>
 #include "spi.h"
 #include "gpio.h"
+#include "si4463_cmd_maps.h"
+#include "radio_config.h"
+#include "si4463_patch.h"
 
 //=============================================================================
 // Configuration Options
@@ -18,6 +21,11 @@
 // Command definitions
 #define CMD_READ_CMD_BUFF       0x44
 #define CMD_GET_CHIP_STATUS     0x23
+#define CMD_FIFO_INFO           0x15 
+#define CMD_WRITE_TX_FIFO       0x66
+#define CMD_START_TX                0x31
+#define CMD_REQUEST_DEVICE_STATE    0x33
+#define CMD_PART_INFO               0x01
 
 //=============================================================================
 // Type definitions
@@ -60,6 +68,10 @@ typedef struct {
     /* GPIO Chip Select Pin */
     GPIO_TypeDef* cs_port;
     uint16_t cs_pin;
+
+    /* GPIO Shutdown Pin SDN (For performing Power on Reset)*/
+    GPIO_TypeDef* sdn_port;
+    uint16_t sdn_pin;
     
 #ifdef SI4463_USE_GPIO_CTS
     /* GPIO Clear To Send Pin (CTS) (only used when SI4463_USE_GPIO_CTS is defined) */
@@ -105,41 +117,34 @@ typedef struct {
  */
 si4463_status_t si4463_init(si4463_dev_t *dev, const si4463_init_t *init);
 
-/**
- * @brief Check if Clear-To-Send signal is active
- * 
- * @param dev Pointer to SI4463 device structure
- * @return uint8_t 1 if CTS is high (ready), 0 if CTS is low (busy)
- */
-uint8_t si4463_check_cts(si4463_dev_t *dev);
+
 
 /**
- * @brief Wait for Clear-To-Send signal with timeout
+ * @brief Get the current FIFO status
  * 
  * @param dev Pointer to SI4463 device structure
- * @param timeout Maximum time to wait in milliseconds
- * @return si4463_status_t SI4463_STATUS_SUCCESS if CTS received, SI4463_STATUS_TIMEOUT on timeout
- */
-si4463_status_t si4463_wait_for_cts(si4463_dev_t *dev, uint16_t timeout);
-
-/**
- * @brief Send a command to the SI4463 device
- * 
- * @param dev Pointer to SI4463 device structure
- * @param cmd Command byte
- * @param data Pointer to command data (can be NULL if no data)
- * @param len Length of command data
+ * @param fifoInfo Pointer to structure to store FIFO information
  * @return si4463_status_t Status code
  */
-si4463_status_t si4463_send_command(si4463_dev_t *dev, uint8_t cmd, uint8_t *data, uint8_t len);
+si4463_status_t si4463_get_fifo_info(si4463_dev_t *dev, struct si446x_reply_FIFO_INFO_map *fifoInfo, uint8_t reset_tx_fifo, uint8_t reset_rx_fifo);
+
+
+
+
+si4463_status_t si4463_write_tx_fifo(si4463_dev_t *dev, uint8_t *data, uint8_t len, uint8_t reset_tx_fifo);
+
+
+si4463_status_t si4463_start_tx(si4463_dev_t *dev, uint8_t conditions, uint16_t tx_len, uint8_t tx_delay, uint8_t num_repeat);
+
+si4463_status_t si4463_get_device_state(si4463_dev_t *dev, uint8_t *curr_state, uint8_t *current_channel);
 
 /**
- * @brief Read response from the SI4463 device
+ * @brief Get part information from the SI4463 device
+ * 
+ * Returns Part Number, Part Version, ROM ID, etc.
  * 
  * @param dev Pointer to SI4463 device structure
- * @param data Pointer to buffer to store response data
- * @param max_len Maximum length of data to read
- * @param actual_len Pointer to store actual length read (can be NULL)
+ * @param part_info Pointer to store part information
  * @return si4463_status_t Status code
  */
-si4463_status_t si4463_read_response(si4463_dev_t *dev, uint8_t *data, uint8_t max_len, uint8_t *actual_len);
+si4463_status_t si4463_get_part_info(si4463_dev_t *dev, struct si446x_reply_PART_INFO_map *part_info);

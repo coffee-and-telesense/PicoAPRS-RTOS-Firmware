@@ -16,8 +16,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)
 
+############################ Feature Selections #############################################
 # Feature selection for GPS library (NON-BLOCKING if ON or BLOCKING if OFF)
 option(GPS_NON_BLOCKING "Enable GPS Blocking/Non-Blocking Feature" ON)
+# Feature selection for Modem Random TX Source
+option(USE_MODEM_RANDOM_TX_SRC "Use random source for modulation (testing purposes)" OFF)
+##############################################################################################
+
 
 # Adds the CubeMX library
 add_subdirectory(CubeMX/cmake/stm32cubemx)
@@ -39,4 +44,7 @@ add_subdirectory(apps/uart_echo_app)
 add_subdirectory(tests/gps_simple_test)
 add_subdirectory(tests/si_config_and_transmit)
 add_subdirectory(tests/si_write_and_read_test)
+
+
+
 
