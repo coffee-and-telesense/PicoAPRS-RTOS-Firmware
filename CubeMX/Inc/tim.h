@@ -35,12 +35,30 @@ extern "C" {
 extern TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN Private defines */
+extern volatile uint8_t delay_complete;
 
 /* USER CODE END Private defines */
 
 void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
+/**
+ * @brief Example implementation for a microsecond delay callback
+ *
+ * Used to set the delay_us function pointer on the bme68x_dev device struct.
+ * This callback is used throughout the Bosch library whenever a microsecond
+ * delay is necessary for proper device functioning.
+ *
+ * @param[in] period_us Duration of the delay in microseconds
+ * @param[in] intf_ptr Pointer to the interface descriptor
+ *
+ * @note: intf_ptr is not used by this function, but needed to satisfy the
+ * callback function signature
+ */
+void delay_us_timer(uint32_t us, void *intf_ptr);
+
+void app_timer_elapsed_hook(TIM_HandleTypeDef *htim);
 
 /* USER CODE END Prototypes */
 
