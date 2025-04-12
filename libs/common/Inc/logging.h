@@ -23,10 +23,10 @@ void debug_init(UART_HandleTypeDef *huart);
 #ifdef DEBUG
     #include <string.h>
     #include <stdarg.h>
-    
+
     // Main debug print macro that will be active in DEBUG builds
     #define DEBUG_PRINT(fmt, ...) printf(fmt, ##__VA_ARGS__)
-    
+
     // Additional debug macros with log levels if needed
     #define DEBUG_INFO(fmt, ...)  printf("[INFO] " fmt, ##__VA_ARGS__)
     #define DEBUG_WARN(fmt, ...)  printf("[WARN] " fmt, ##__VA_ARGS__)
@@ -34,17 +34,18 @@ void debug_init(UART_HandleTypeDef *huart);
 
     // Conditional debug printing (only prints if condition is true)
     #define DEBUG_IF(cond, fmt, ...) do { if (cond) printf(fmt, ##__VA_ARGS__); } while(0)
-    
+
     // Debug printing with function name and line number information
     #define DEBUG_TRACE(fmt, ...) printf("[%s:%d] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
-    
+
 #else
     // Empty macros when DEBUG is not defined
     #define DEBUG_PRINT(fmt, ...) ((void)0)
     #define DEBUG_INFO(fmt, ...)  ((void)0)
     #define DEBUG_WARN(fmt, ...)  ((void)0)
     #define DEBUG_ERROR(fmt, ...) ((void)0)
-    #define debug_print(fmt, ...) ((void)0)
+    #define DEBUG_IF(cond, fmt, ...) ((void)0)
+    #define DEBUG_TRACE(fmt, ...) ((void)0)
 #endif
 
 // Debug logger initialization function is always defined
@@ -57,7 +58,7 @@ void initialize_sensors(void) {
     DEBUG_TRACE("Starting sensor initialization\r\n");
     // Function body...
 }
-// Output: 
+// Output:
 // [initialize_sensors:3] Starting sensor initialization
 
 void read_sensor_data(void) {
@@ -70,7 +71,7 @@ void read_sensor_data(void) {
 
 DEBUG_IF(temperature > 30, "Temperature alert: %d°C\r\n", temperature);
 // Output: (Only if temperature > 30)
-// Temperature alert: 35°C 
+// Temperature alert: 35°C
 
 
 **********************************************************************************************/
