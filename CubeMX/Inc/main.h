@@ -73,6 +73,8 @@ void Error_Handler(void);
 #define USART2_RX_GPIO_Port GPIOA
 #define User_LED_Pin GPIO_PIN_5
 #define User_LED_GPIO_Port GPIOA
+#define SI_NIRQ_Pin GPIO_PIN_10
+#define SI_NIRQ_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
