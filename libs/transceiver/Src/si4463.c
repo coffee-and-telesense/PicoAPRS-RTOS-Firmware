@@ -29,7 +29,7 @@ void reset_trx_info(si4463_dev_t *dev);
  *       used for the CTS check. Read the documentation on polling CTS to understand
  *       why this is the case.
  *
- * TODO: The changing between GPIO and SPI is not ideal, we should probably
+ * TODO: The changing between GPIO and SPI Polling is not ideal, we should probably
  *       have a single method we use. Keeping for now since we don't know how
  *       many pins we have available on the MCU or which is the best way to do this.
  *      Also, some commands require CTS within the response stream, and some don't so
@@ -118,6 +118,10 @@ si4463_status_t si4463_init(si4463_dev_t *dev, const si4463_init_t *init)
 
     // Initialize device state
     dev->initialized = 1;
+    dev->trx_info.index = 0;
+    dev->trx_info.mode = SI4463_MODE_IDLE;
+    dev->tx_size = 0;
+    dev->rx_size = 0;
 
     // add dev delay for device to power up
     dev->config.delay_blocking(10); // 10 seconds delay for power up
@@ -439,7 +443,7 @@ si4463_status_t si4463_start_tx(si4463_dev_t *dev,
     if (dev == NULL || tx_len == 0 || tx_len > 8192) {
         return SI4463_STATUS_INVALID_PARAM;
     }
-
+    // TODO: add mask of upper bits
     uint8_t tx_len_upper = (uint8_t)(tx_len >> 8); // Upper byte of tx_len
     uint8_t tx_len_lower = (uint8_t)(tx_len & 0xFF); // Lower byte of tx_len
 
@@ -498,7 +502,7 @@ si4463_status_t si4463_get_device_state(si4463_dev_t *dev, uint8_t *curr_state, 
 
     // If current_channel pointer is provided, store the channel value
     if (current_channel != NULL) {
-        *current_channel = reply.REQUEST_DEVICE_STATE.CURRENT_CHANNEL; // CURRENT_CHANNEL is at index 2
+        *current_channel = reply.REQUEST_DEVICE_STATE.CURRENT_CHANNEL; // Note: We probably don't need this
     }
 
     return SI4463_STATUS_SUCCESS;
@@ -614,6 +618,11 @@ si4463_status_t si4463_transmit_packet(si4463_dev_t *dev, uint8_t *data, uint16_
 }
 
 // IRQ packet handler for tx fifo almost empty or fifo almost full
+// TODO: We do not need to poll the IRQ status because at this time, the
+// NIRQ pin is only connect to the Packet handler group and will only generate
+// an interrupt when the TX FIFO is almost empty or RX FIFO is almost full.
+// IMPORTANT: If the NIRQ group configs change this function will need to be
+// updated to check the IRQ status
 si4463_status_t si4463_irq_pkt_handler(si4463_dev_t *dev) {
     if(dev == NULL) {
         return SI4463_STATUS_INVALID_PARAM;
@@ -621,37 +630,22 @@ si4463_status_t si4463_irq_pkt_handler(si4463_dev_t *dev) {
     if(dev->trx_info.mode == SI4463_MODE_IDLE) {
         return SI4463_STATUS_ERROR; // Device is not in Transmit or Receive mode
     }
-    uint8_t cmd_buff[2] = {CMD_GET_PH_STATUS, 0xFC};   // Clear bits TX Almost Empty/ RX Almost Full
-
-    union si446x_cmd_reply_union reply;
     si4463_status_t status;
 
-    // Check for valid parameters
-    if (dev == NULL) {
-        return SI4463_STATUS_INVALID_PARAM;
+    // IRQ Generation was from RX
+    // TODO: RX is not implemented yet
+    if(dev->trx_info.mode == SI4463_MODE_RX) {
+        return SI4463_STATUS_ERROR;             // RX is not implemented yet
     }
 
-    // Send command to get interrupt status and get response
-    status = radio_comm_sendcmd_getresp(dev, cmd_buff, sizeof(cmd_buff),
-                                        (uint8_t *)&reply, sizeof(reply.GET_PH_STATUS));
-
-    if (status != SI4463_STATUS_SUCCESS) {
-        return status; // Error in sending command or receiving response
-    }
-
-    // Handle the interrupt status here
-    if(RX_FIFO_ALMOST_FULL_(reply.GET_PH_STATUS.PH_STATUS)) {
-        // TODO: Not implemented yet
-        return SI4463_STATUS_ERROR;
-    }
-
-    if(TX_FIFO_ALMOST_EMPTY_(reply.GET_PH_STATUS.PH_STATUS)) {
-        if((dev->trx_info.index > dev->tx_size) || (dev->trx_info.mode != SI4463_MODE_TX)) {
-            return SI4463_STATUS_ERROR; // Error in index
+    // IRQ Generation was from TX
+    if(dev->trx_info.mode == SI4463_MODE_TX) {
+        if(dev->trx_info.index > dev->tx_size) {
+            return SI4463_STATUS_ERROR;
         }
         // TX FIFO almost empty, handle accordingly
         uint8_t chunk_size = (dev->tx_size - dev->trx_info.index > 16) ? 16 : dev->tx_size - dev->trx_info.index;
-        si4463_status_t status = si4463_write_tx_fifo(dev, &dev->radio_tx_buffer[dev->trx_info.index], chunk_size, 0);
+        status = si4463_write_tx_fifo(dev, &dev->radio_tx_buffer[dev->trx_info.index], chunk_size, 0);
 
         if (status != SI4463_STATUS_SUCCESS) {
             return status; // Error in writing to TX FIFO
@@ -668,6 +662,7 @@ si4463_status_t si4463_irq_pkt_handler(si4463_dev_t *dev) {
     }
 
     // Shouldn't reach here, but return error if we do
+    // Something went wrong
     return SI4463_STATUS_ERROR;
 }
 

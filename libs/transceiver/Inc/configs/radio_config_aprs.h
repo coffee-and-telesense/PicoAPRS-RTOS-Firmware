@@ -6,7 +6,8 @@
  */
 
  // =============================================================================
- // API Command Structure
+ // API Command Structure for Setting Properties
+ // =============================================================================
  // Command ID | Group  | Number of Properties (N) | Starting Index | Value 1|...| Value N |
  // =============================================================================
 
@@ -25,7 +26,7 @@
 // Descriptions:
 //   MODEM_FREQ_OFFSET - TX Frequency offset adjustment to account for crystal oscillator frequency error.
 */
-#define RF_MODEM_FREQ_OFFSET_2 0x11, 0x20, 0x02, 0x0d, 0x01, 0xFE
+#define RF_MODEM_FREQ_OFFSET_2 0x11, 0x20, 0x02, 0x0D, 0x01, 0xFE
 // ==============================================================================
 
 // INPUT DATA
@@ -63,7 +64,7 @@
 // Description:              Configures the GPIO pins.
 //             - NIRQ = 0xA7 : Enable NIRQ pin w/ pull-up resistor
 */
-#define RF_GPIO_PIN_CFG 0x13, 0x00, 0x00, 0x00, 0x00, 0xA7, 0x00, 0x00
+#define RF_GPIO_PIN_CFG 0x13, 0x00, 0x00, 0x00, 0x00, 0x67, 0x00, 0x00
 
 /*
 // Set properties:           RF_GLOBAL_XO_TUNE_2
@@ -538,7 +539,7 @@
 //   PA_BIAS_CLKDUTY - Configuration of the PA Bias and duty cycle of the TX clock source.
 //   PA_TC - Configuration of PA ramping parameters.
 */
-#define RF_PA_MODE_4 0x11, 0x22, 0x04, 0x00, 0x08, 0x0A, 0x00, 0x1D
+#define RF_PA_MODE_4 0x11, 0x22, 0x04, 0x00, 0x08, 0x10, 0x00, 0x1D
 
 /*
 // Set properties:           RF_SYNTH_PFDCP_CPFF_7

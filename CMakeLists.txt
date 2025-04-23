@@ -44,7 +44,4 @@ add_subdirectory(apps/uart_echo_app)
 add_subdirectory(tests/gps_simple_test)
 add_subdirectory(tests/si_config_and_transmit)
 add_subdirectory(tests/si_write_and_read_test)
-
-
-
-
+add_subdirectory(tests/si_aprs_transmission_test)

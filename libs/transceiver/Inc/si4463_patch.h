@@ -1,7 +1,7 @@
 #pragma once
 
 // Patch Commands DO NOT EDIT/MODIFY!
-// See page 52 of programming guide for details: 
+// See page 52 of programming guide for details:
 // https://www.silabs.com/documents/public/application-notes/AN633.pdf
 
 

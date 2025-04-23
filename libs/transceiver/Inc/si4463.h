@@ -49,7 +49,7 @@ typedef enum {
 // Function pointer for blocking delay
 typedef void (*delay_blocking_fn)(uint32_t delay);
 
-// Function pointer typedefs using direct STM32 HAL types
+// Function pointer typedefs using STM32 HAL types
 typedef HAL_StatusTypeDef (*spi_transmit)(SPI_HandleTypeDef *hspi, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 typedef HAL_StatusTypeDef (*spi_receive)(SPI_HandleTypeDef *hspi, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 typedef HAL_StatusTypeDef (*spi_transmit_receive)(SPI_HandleTypeDef *hspi, uint8_t *pTxData, uint8_t *pRxData, uint16_t Size, uint32_t Timeout);
@@ -90,6 +90,7 @@ typedef enum {
     SI4463_MODE_TX,
     SI4463_MODE_RX
 } si4463_trx_mode_t;
+
 typedef struct {
     // Pointer to place in buffer to start from
     uint8_t index;
@@ -168,3 +169,9 @@ si4463_status_t si4463_get_part_info(si4463_dev_t *dev, struct si446x_reply_PART
 
 
 si4463_status_t si4463_transmit_packet(si4463_dev_t *dev, uint8_t *data, uint16_t len);
+
+si4463_status_t si4463_irq_pkt_handler(si4463_dev_t *dev);
+
+
+/*TODO: Delete me*/
+uint8_t check_command_error(si4463_dev_t *dev);
