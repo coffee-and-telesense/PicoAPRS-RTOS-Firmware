@@ -184,6 +184,52 @@ uint8_t check_command_error(si4463_dev_t *dev)
     return 0;
 }
 
+// TODO:  Check interrupt group of packet handler
+uint8_t check_pkt_handler_status(si4463_dev_t *dev)
+{
+    uint8_t hal_status;
+    uint8_t cmd_buff[2] = {CMD_GET_PH_STATUS, 0x00}; // 0xFF doesn't clear interrupt flags
+                                                       // i.e. NOP
+
+    // Send command to get chip status
+    // Wait for CTS
+    if (si4463_wait_for_cts(dev, 100) != SI4463_STATUS_SUCCESS) {
+        return SI4463_STATUS_TIMEOUT; // Timeout waiting for CTS
+    }
+    // Send command to get chip status
+
+    SI4463_CS_LOW(dev);
+    hal_status = dev->config.transmit(dev->config.hspi, cmd_buff, 2, 100);
+    SI4463_CS_HIGH(dev);
+
+    if (hal_status != HAL_OK) {
+        return SI4463_STATUS_ERROR; // Error in communication
+    }
+
+    uint8_t tx_buffer[6] = {CMD_READ_CMD_BUFF, 0, 0, 0, 0, 0};
+    uint8_t reply_buffer[6] = {0};
+
+    // Wait for CTS
+    if (si4463_wait_for_cts(dev, 100) != SI4463_STATUS_SUCCESS) {
+        return SI4463_STATUS_TIMEOUT; // Timeout waiting for CTS
+    }
+
+    // Check for command error
+    SI4463_CS_LOW(dev);
+    hal_status = dev->config.transmit_receive(dev->config.hspi, tx_buffer, reply_buffer, 6, 100);
+    SI4463_CS_HIGH(dev);
+
+    if (hal_status != HAL_OK) {
+        return SI4463_STATUS_ERROR; // Error in communication
+    }
+
+    struct si446x_reply_GET_PH_STATUS_map *reply = (struct si446x_reply_GET_PH_STATUS_map *)&reply_buffer[2];
+    if(reply->PH_PEND!= 0) {
+        return reply->PH_STATUS;
+    }
+    return 0;
+}
+
 
 /**
  * @brief Send a command to the SI4463 device that also expects a response. Its essentially a wrapper

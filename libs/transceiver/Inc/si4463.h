@@ -24,6 +24,7 @@
 #define CMD_READ_CMD_BUFF       0x44
 #define CMD_GET_PH_STATUS       0x21
 #define CMD_GET_CHIP_STATUS     0x23
+
 #define CMD_FIFO_INFO           0x15
 #define CMD_WRITE_TX_FIFO       0x66
 #define CMD_START_TX                0x31
@@ -175,3 +176,6 @@ si4463_status_t si4463_irq_pkt_handler(si4463_dev_t *dev);
 
 /*TODO: Delete me*/
 uint8_t check_command_error(si4463_dev_t *dev);
+
+/*TODO: Delete me*/
+uint8_t check_pkt_handler_status(si4463_dev_t *dev);

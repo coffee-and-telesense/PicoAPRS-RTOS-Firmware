@@ -62,8 +62,9 @@
 /*
 // Command:                  RF_GPIO_PIN_CFG
 // Description:              Configures the GPIO pins.
-//             - NIRQ = 0xA7 : Enable NIRQ pin w/ pull-up resistor
+//             - NIRQ = 0x67 : Enable NIRQ pin w/ pull-up resistor
 */
+//#define RF_GPIO_PIN_CFG 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 #define RF_GPIO_PIN_CFG 0x13, 0x00, 0x00, 0x00, 0x00, 0x67, 0x00, 0x00
 
 /*
@@ -100,7 +101,9 @@
 //      - INT_CTL_ENABLE = 0x01: Enables Packet Handler (PH) interrupts.
 //      - INT_CTL_PH_ENABLE = 0x02: Enables both TX Almost Empty and RX Almost Full PH interrupts
 */
-#define RF_INT_CTL_ENABLE_1 0x11, 0x01, 0x02, 0x00, 0x01, 0x03
+// #define RF_INT_CTL_ENABLE_1 0x11, 0x01, 0x02, 0x00, 0x01, 0xFF // didn't work
+#define RF_INT_CTL_ENABLE_2 0x11, 0x01, 0x02, 0x00, 0x01, 0x03
+//#define RF_INT_CTL_ENABLE_1 0x11, 0x01, 0x01, 0x00, 0x00
 
 /*
 // Set properties:           RF_FRR_CTL_A_MODE_4
@@ -539,7 +542,7 @@
 //   PA_BIAS_CLKDUTY - Configuration of the PA Bias and duty cycle of the TX clock source.
 //   PA_TC - Configuration of PA ramping parameters.
 */
-#define RF_PA_MODE_4 0x11, 0x22, 0x04, 0x00, 0x08, 0x10, 0x00, 0x1D
+#define RF_PA_MODE_4 0x11, 0x22, 0x04, 0x00, 0x08, 0x0A, 0x00, 0x1D
 
 /*
 // Set properties:           RF_SYNTH_PFDCP_CPFF_7
@@ -602,14 +605,15 @@
 
 
 // AUTOMATICALLY GENERATED CODE!
-// DO NOT EDIT/MODIFY BELOW THIS LINE!
+// TAKE CAUTION WHEN MODIFYING!
+// NOTE: If you edit a member of this array, you must also edit the corresponding length!!!!
 // --------------------------------------------
 #define RADIO_CONFIGURATION_DATA_ARRAY { \
         0x07, RF_POWER_UP, \
         0x08, RF_GPIO_PIN_CFG, \
         0x06, RF_GLOBAL_XO_TUNE_2, \
         0x05, RF_GLOBAL_CONFIG_1, \
-        0x05, RF_INT_CTL_ENABLE_1, \
+        0x06, RF_INT_CTL_ENABLE_2, \
         0x08, RF_FRR_CTL_A_MODE_4, \
         0x0D, RF_PREAMBLE_TX_LENGTH_9, \
         0x0A, RF_SYNC_CONFIG_6, \
