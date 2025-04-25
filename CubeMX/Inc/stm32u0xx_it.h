@@ -48,6 +48,7 @@
 /* Exported functions prototypes ---------------------------------------------*/
 void NMI_Handler(void);
 void HardFault_Handler(void);
+void EXTI4_15_IRQHandler(void);
 void TIM6_DAC_LPTIM1_IRQHandler(void);
 void I2C1_IRQHandler(void);
 void USART2_LPUART2_IRQHandler(void);

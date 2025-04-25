@@ -29,6 +29,17 @@ void validate_si4463_part(si4463_dev_t *dev);
 #define SI_SDN_PIN GPIO_PIN_8
 #define SI_SDN_PORT GPIOA
 
+uint8_t tx_data[] = {
+    0x01, 0x01, 0x4C, 0xCB, 0x13, 0x4C, 0xA9, 0x56, 0xAE,
+    0xE4, 0xE4, 0xF1, 0x33, 0x33, 0x2C, 0x51, 0xD5,
+    0x5F, 0x66, 0x2D, 0x5D, 0x5D, 0x5D, 0x72, 0xA2,
+    0xA2, 0x5D, 0x72, 0xA2, 0xA2, 0xDD, 0x72, 0xA2,
+    0xA2, 0x22, 0x8D, 0x5D, 0x5D, 0x62, 0x8D, 0x5D,
+    0x5D, 0x9D, 0x72, 0xA2, 0xA2, 0xA2, 0xA2, 0x5D,
+    0xA2, 0xA2, 0xA2, 0xB1, 0x91, 0x71, 0x71, 0xF1,
+    0xAD, 0x09, 0x51, 0x01, 0x01
+};
+
  /**
   * @brief Main application entry point
   */
@@ -134,11 +145,11 @@ void si4463_test_transmit(void){
     uint8_t current_channel = 0;
     struct si446x_reply_FIFO_INFO_map fifoInfo;
 
-    /* Create alternating pattern (0xAA = 10101010 in binary) */
-    uint8_t tx_data[50];
-    for (size_t i = 0; i < sizeof(tx_data); i++) {
-        tx_data[i] = (i % 2 == 0) ? 0xAA : 0x55; /* Alternates between 10101010 and 01010101 */
-    }
+    // /* Create alternating pattern (0xAA = 10101010 in binary) */
+    // uint8_t tx_data[50];
+    // for (size_t i = 0; i < sizeof(tx_data); i++) {
+    //     tx_data[i] = (i % 2 == 0) ? 0xAA : 0x55; /* Alternates between 10101010 and 01010101 */
+    // }
 
     /* Initial FIFO reset */
     status = si4463_get_fifo_info(&si4463_device, &fifoInfo, 1, 0); // Reset TX FIFO
@@ -189,12 +200,6 @@ void si4463_test_transmit(void){
         /* If not in TX state (7) AND in READY state (3 or 4), restart transmission */
         if (curr_state != 7 && (curr_state == 3 || curr_state == 4)) {
             DEBUG_INFO("Device in READY state, restarting transmission...\r\n");
-            uint8_t ph_status = check_pkt_handler_status(&si4463_device);
-            if (ph_status != 0) {
-                DEBUG_ERROR("Packet Handler Status Error: %d\r\n", ph_status);
-                HAL_Delay(500);
-                continue;
-            }
 
             /* Reset TX FIFO */
             status = si4463_get_fifo_info(&si4463_device, &fifoInfo, 1, 0);
@@ -231,7 +236,7 @@ void si4463_test_transmit(void){
         }
 
         /* Small delay between state checks */
-        HAL_Delay(500);
+        HAL_Delay(5000);
     }
 }
 

@@ -189,24 +189,23 @@ void dev_state_one_shot(si4463_dev_t *dev) {
   * This function is called from the EXTI interrupt handler
   * to process the NIRQ interrupt from the SI4463.
   */
-void handle_irq_event(void) {
-    si4463_status_t status;
+// void handle_irq_event(void) {
+//     si4463_status_t status;
 
-    /* Call the packet handler to refill the TX FIFO */
-    status = si4463_irq_pkt_handler(&si4463_device);
+//     /* Call the packet handler to refill the TX FIFO */
+//     status = si4463_irq_pkt_handler(&si4463_device);
 
-    if (status != SI4463_STATUS_SUCCESS) {
-        DEBUG_ERROR("IRQ handler error with status: %d\r\n", status);
-    }
-}
+//     if (status != SI4463_STATUS_SUCCESS) {
+//         DEBUG_ERROR("IRQ handler error with status: %d\r\n", status);
+//     }
+// }
 
-/**
-  * @brief EXTI line detection callback
-  * @note This function handles the NIRQ interrupt
-  */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-    if (GPIO_Pin == SI_NIRQ_Pin) {
-         /* NIRQ pin triggered, handle the interrupt */
-        handle_irq_event();
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {
+    if ((GPIO_Pin == SI_NIRQ_Pin) & (si4463_device.initialized)) {
+            si4463_irq_pkt_handler(&si4463_device);
+            DEBUG_INFO("IRQ Handled...\r\n");
+    } else {
+            DEBUG_ERROR("NIRQ triggered but SI4463 not initialized\r\n");
     }
 }

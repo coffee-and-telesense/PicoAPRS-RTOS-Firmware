@@ -100,6 +100,7 @@ si4463_status_t radio_reset(uint16_t GPIO_SDN_Pin, GPIO_TypeDef* GPIOSDN_Port) {
 si4463_status_t si4463_init(si4463_dev_t *dev, const si4463_init_t *init)
 {
     si4463_status_t status; // Add this line
+    dev->initialized = 0;
     // Copy configuration
     dev->config = *init;
     // Set CS pin high (inactive) initially
@@ -117,7 +118,6 @@ si4463_status_t si4463_init(si4463_dev_t *dev, const si4463_init_t *init)
     }
 
     // Initialize device state
-    dev->initialized = 1;
     dev->trx_info.index = 0;
     dev->trx_info.mode = SI4463_MODE_IDLE;
     dev->tx_size = 0;
@@ -131,7 +131,7 @@ si4463_status_t si4463_init(si4463_dev_t *dev, const si4463_init_t *init)
         dev->initialized = 0; // Mark device as uninitialized
         return SI4463_STATUS_ERROR; // Error in radio configuration
     }
-
+    dev->initialized = 1; // Mark device as initialized
     return SI4463_STATUS_SUCCESS;
 }
 
@@ -147,6 +147,11 @@ si4463_status_t si4463_init(si4463_dev_t *dev, const si4463_init_t *init)
  */
 uint8_t check_command_error(si4463_dev_t *dev)
 {
+    // TODO: This function doesn't behave as expected, need to recreate error,
+    // for eroneously setting the wrong command length and observe what happens,
+    // specifically, set the length of RF_INT_CTL_ENABLE_2 to 0x05 in config array
+    // and see what things get generated from here.
+    // TODO: consider adding compile time checks for the command length of each member
     uint8_t hal_status;
     uint8_t cmd_buff[2] = {CMD_GET_CHIP_STATUS, 0xFF}; // 0xFF doesn't clear interrupt flags
                                                        // i.e. NOP
@@ -333,6 +338,7 @@ si4463_status_t radio_comm_read_response(si4463_dev_t *dev, uint8_t *resp_buff, 
  */
 si4463_status_t radio_config_init(si4463_dev_t *dev)
 {
+
     // Radio configuration data array defined in radio_config.h
     static const uint8_t radio_config_data[] = RADIO_CONFIGURATION_DATA_ARRAY;
     uint16_t index = 0;
@@ -649,6 +655,9 @@ si4463_status_t si4463_transmit_packet(si4463_dev_t *dev, uint8_t *data, uint16_
     dev->trx_info.index = 0;
     dev->trx_info.mode = SI4463_MODE_TX;
     dev->tx_size = len;
+    // Service the peripheral lord...
+    // TODO:
+    check_pkt_handler_status(dev);
 
     uint8_t chunk_size = (len > 64) ? 64 : len;
     si4463_status_t status = si4463_write_tx_fifo(dev, &dev->radio_tx_buffer[dev->trx_info.index], chunk_size, 1);
@@ -692,6 +701,8 @@ si4463_status_t si4463_irq_pkt_handler(si4463_dev_t *dev) {
         // TX FIFO almost empty, handle accordingly
         uint8_t chunk_size = (dev->tx_size - dev->trx_info.index > 16) ? 16 : dev->tx_size - dev->trx_info.index;
         status = si4463_write_tx_fifo(dev, &dev->radio_tx_buffer[dev->trx_info.index], chunk_size, 0);
+        // Must service peripheral lord...
+        check_pkt_handler_status(dev);
 
         if (status != SI4463_STATUS_SUCCESS) {
             return status; // Error in writing to TX FIFO

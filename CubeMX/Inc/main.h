@@ -73,12 +73,13 @@ void Error_Handler(void);
 #define USART2_RX_GPIO_Port GPIOA
 #define User_LED_Pin GPIO_PIN_5
 #define User_LED_GPIO_Port GPIOA
-#define SI_NIRQ_Pin GPIO_PIN_10
-#define SI_NIRQ_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
 #define SWCLK_GPIO_Port GPIOA
+#define SI_NIRQ_Pin GPIO_PIN_5
+#define SI_NIRQ_GPIO_Port GPIOB
+#define SI_NIRQ_EXTI_IRQn EXTI4_15_IRQn
 #define I2C1_SCL_Pin GPIO_PIN_8
 #define I2C1_SCL_GPIO_Port GPIOB
 #define I2C1_SDA_Pin GPIO_PIN_9
