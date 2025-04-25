@@ -6,5 +6,6 @@ target_sources(bme68x_test PRIVATE
 
 target_link_libraries(bme68x_test PRIVATE 
     stm32cubemx
+    common
     bme68x
 )
