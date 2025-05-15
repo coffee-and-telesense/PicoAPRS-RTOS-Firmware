@@ -608,41 +608,9 @@ si4463_status_t radio_apply_patch(si4463_dev_t *dev) {
     return SI4463_STATUS_SUCCESS;
 }
 
-/**
- * @brief Get part information from the SI4463 device
- *
- * Returns Part Number, Part Version, ROM ID, etc.
- *
- * @param dev Pointer to SI4463 device structure
- * @param part_info Pointer to store part information
- * @return si4463_status_t Status code
- */
-si4463_status_t si4463_get_part_info(si4463_dev_t *dev, struct si446x_reply_PART_INFO_map *part_info) {
-    uint8_t cmd_buff[1] = {CMD_PART_INFO};  // Command code for PART_INFO (0x01)
-    union si446x_cmd_reply_union reply;
-    si4463_status_t status;
-
-    // Check for valid parameters
-    if (dev == NULL || part_info == NULL) {
-        return SI4463_STATUS_INVALID_PARAM;
-    }
-
-    // Send command to request part info and get response
-    status = radio_comm_sendcmd_getresp(dev, cmd_buff, sizeof(cmd_buff),
-                                      (uint8_t *)&reply, sizeof(reply.PART_INFO));
-
-    if (status != SI4463_STATUS_SUCCESS) {
-        return status; // Error in sending command or receiving response
-    }
-
-    // Copy the response to the provided structure
-    memcpy(part_info, &reply.PART_INFO, sizeof(reply.PART_INFO));
-
-    return SI4463_STATUS_SUCCESS;
-}
-
 // Used for transmitting data that is beyond the 64 byte limit, the remainer of the data will need to be handled by the
 // IRQ handler
+__attribute__((warning("Function is still under development, IRQ handler for when tx_len > 64 doesn't work yet")))
 si4463_status_t si4463_transmit_packet(si4463_dev_t *dev, uint8_t *data, uint16_t len){
     if (dev == NULL || data == NULL || len == 0) {
         return SI4463_STATUS_INVALID_PARAM;
@@ -673,11 +641,8 @@ si4463_status_t si4463_transmit_packet(si4463_dev_t *dev, uint8_t *data, uint16_
 }
 
 // IRQ packet handler for tx fifo almost empty or fifo almost full
-// TODO: We do not need to poll the IRQ status because at this time, the
-// NIRQ pin is only connect to the Packet handler group and will only generate
-// an interrupt when the TX FIFO is almost empty or RX FIFO is almost full.
-// IMPORTANT: If the NIRQ group configs change this function will need to be
-// updated to check the IRQ status
+// IMPORTANT: If using NIRQ Pin group configs need to be set in radio_config.h
+__attribute__((warning("Function is still under development, IRQ handler for when tx_len > 64 doesn't work yet")))
 si4463_status_t si4463_irq_pkt_handler(si4463_dev_t *dev) {
     if(dev == NULL) {
         return SI4463_STATUS_INVALID_PARAM;

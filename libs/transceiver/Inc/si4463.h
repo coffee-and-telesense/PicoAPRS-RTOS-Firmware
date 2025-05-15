@@ -37,12 +37,12 @@
 
 // Status enumeration
 typedef enum {
-    SI4463_STATUS_SUCCESS = 0x00,    // Operation completed successfully
-    SI4463_STATUS_ERROR   = 0x01,    // General error occurred
-    SI4463_STATUS_TIMEOUT = 0x02,    // Operation timed out
-    SI4463_STATUS_BUSY    = 0x03,    // Device is busy
-    SI4463_STATUS_CTS_TIMEOUT = 0x04, // CTS signal timeout
-    SI4463_STATUS_FIFO_ERROR = 0x05, // TX/RX FIFO error
+    SI4463_STATUS_SUCCESS = 0x00,      // Operation completed successfully
+    SI4463_STATUS_ERROR   = 0x01,      // General error occurred
+    SI4463_STATUS_TIMEOUT = 0x02,      // Operation timed out
+    SI4463_STATUS_BUSY    = 0x03,      // Device is busy
+    SI4463_STATUS_CTS_TIMEOUT = 0x04,  // CTS signal timeout
+    SI4463_STATUS_FIFO_ERROR = 0x05,   // TX/RX FIFO error
     SI4463_STATUS_INVALID_PARAM = 0x06 // Invalid parameter provided
 } si4463_status_t;
 
@@ -130,6 +130,10 @@ typedef struct {
 /**
  * @brief Initialize the SI4463 RF Transceiver
  *
+ * Initializes the SI4463 device with the provided configuration. Performs power-on
+ * reset via SDN pin, applies any patches if needed, and configures the device using
+ * settings from radio_config.h.
+ *
  * @param dev Pointer to device structure to initialize
  * @param init Pointer to initialization configuration
  * @return si4463_status_t Status code
@@ -141,41 +145,103 @@ si4463_status_t si4463_init(si4463_dev_t *dev, const si4463_init_t *init);
 /**
  * @brief Get the current FIFO status
  *
+ * Retrieves current status of TX and RX FIFOs, including fill levels and state flags.
+ * Can optionally reset either or both FIFOs.
+ *
  * @param dev Pointer to SI4463 device structure
  * @param fifoInfo Pointer to structure to store FIFO information
+ * @param reset_tx_fifo Flag to reset TX FIFO (1 to reset, 0 to not reset)
+ * @param reset_rx_fifo Flag to reset RX FIFO (1 to reset, 0 to not reset)
  * @return si4463_status_t Status code
  */
 si4463_status_t si4463_get_fifo_info(si4463_dev_t *dev, struct si446x_reply_FIFO_INFO_map *fifoInfo, uint8_t reset_tx_fifo, uint8_t reset_rx_fifo);
 
 
 
-
-si4463_status_t si4463_write_tx_fifo(si4463_dev_t *dev, uint8_t *data, uint8_t len, uint8_t reset_tx_fifo);
-
-
-si4463_status_t si4463_start_tx(si4463_dev_t *dev, uint8_t conditions, uint16_t tx_len, uint8_t tx_delay, uint8_t num_repeat);
-
-si4463_status_t si4463_get_device_state(si4463_dev_t *dev, uint8_t *curr_state, uint8_t *current_channel);
-
 /**
- * @brief Get part information from the SI4463 device
+ * @brief Write data to the TX FIFO
  *
- * Returns Part Number, Part Version, ROM ID, etc.
+ * Writes up to 64 bytes of data to the SI4463 TX FIFO. Can optionally reset the TX
+ * FIFO before writing data.
  *
  * @param dev Pointer to SI4463 device structure
- * @param part_info Pointer to store part information
+ * @param data Pointer to data to write
+ * @param len Length of data (maximum 64 bytes per write)
+ * @param reset_tx_fifo Flag to reset TX FIFO before writing
  * @return si4463_status_t Status code
  */
-si4463_status_t si4463_get_part_info(si4463_dev_t *dev, struct si446x_reply_PART_INFO_map *part_info);
+si4463_status_t si4463_write_tx_fifo(si4463_dev_t *dev, uint8_t *data, uint8_t len, uint8_t reset_tx_fifo);
+
+/**
+ * @brief Start transmitting data from the TX FIFO
+ *
+ * Initiates transmission of data previously loaded into TX FIFO. The function configures
+ * transmission parameters including channel, conditions, length, delay, and repetition.
+ *
+ * @param dev Pointer to SI4463 device structure
+ * @param conditions Condition flags for transmission
+ * @param tx_len Length of data to transmit
+ * @param tx_delay Delay before transmission starts
+ * @param num_repeat Number of times to repeat the transmission
+ * @return si4463_status_t Status code
+ */
+si4463_status_t si4463_start_tx(si4463_dev_t *dev, uint8_t conditions, uint16_t tx_len, uint8_t tx_delay, uint8_t num_repeat);
+
+/**
+ * @brief Get the current device state
+ *
+ * Retrieves the current operational state of the SI4463 device and optionally
+ * the current channel.
+ *
+ * @param dev Pointer to SI4463 device structure
+ * @param curr_state Pointer to store the current state value
+ * @param current_channel Pointer to store the current channel (can be NULL)
+ * @return si4463_status_t Status code
+ */
+si4463_status_t si4463_get_device_state(si4463_dev_t *dev, uint8_t *curr_state, uint8_t *current_channel);
 
 
+/**
+ * @brief Transmit a complete packet of data
+ *
+ * High-level function that handles the complete packet transmission process:
+ * copies data to buffer, writes to TX FIFO, and starts transmission.
+ *
+ * @param dev Pointer to SI4463 device structure
+ * @param data Pointer to data to transmit
+ * @param len Length of data (maximum BUFFER_SIZE)
+ * @return si4463_status_t Status code
+ */
 si4463_status_t si4463_transmit_packet(si4463_dev_t *dev, uint8_t *data, uint16_t len);
 
+/**
+ * @brief Interrupt handler for packet processing
+ *
+ * Handles interrupts for TX FIFO almost empty and RX FIFO almost full conditions.
+ * Called from the IRQ handler when the NIRQ pin is triggered.
+ * @note: This function is still under development and may not work correctly
+ *
+ * @param dev Pointer to SI4463 device structure
+ * @return si4463_status_t Status code
+ */
 si4463_status_t si4463_irq_pkt_handler(si4463_dev_t *dev);
 
-
-/*TODO: Delete me*/
+/**
+ * @brief Check for command errors in the chip status
+ *
+ * Debug helper function that returns the command ID that caused an error, or 0 if no error.
+ *
+ * @param dev Pointer to SI4463 device structure
+ * @return Command ID that caused error, or 0 if no error
+ */
 uint8_t check_command_error(si4463_dev_t *dev);
 
-/*TODO: Delete me*/
+/**
+ * @brief Check packet handler status
+ *
+ * Debug helper function that reads the packet handler status and checks for pending events.
+ *
+ * @param dev Pointer to SI4463 device structure
+ * @return Packet handler status flags
+ */
 uint8_t check_pkt_handler_status(si4463_dev_t *dev);

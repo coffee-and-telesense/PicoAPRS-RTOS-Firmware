@@ -19,8 +19,7 @@ add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)
 ############################ Feature Selections #############################################
 # Feature selection for GPS library (NON-BLOCKING if ON or BLOCKING if OFF)
 option(GPS_NON_BLOCKING "Enable GPS Blocking/Non-Blocking Feature" ON)
-# Feature selection for Modem Random TX Source
-option(USE_MODEM_RANDOM_TX_SRC "Use random source for modulation (testing purposes)" OFF)
+# ADD more options here as needed
 ##############################################################################################
 
 
