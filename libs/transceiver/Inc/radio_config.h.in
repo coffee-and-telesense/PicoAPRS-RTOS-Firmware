@@ -1,0 +1,7 @@
+// This file is auto-generated based on CMake configuration
+// Do not edit directly!
+
+#pragma once
+
+// Include the selected configuration
+#include "configs/radio_config_@RADIO_CONFIG_TYPE@.h"
