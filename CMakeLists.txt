@@ -14,7 +14,9 @@ option(GPS_NON_BLOCKING "Enable GPS Blocking/Non-Blocking Feature" ON)
 
 # Add the CubeMX library
 add_subdirectory(CubeMX/cmake/stm32cubemx)
+add_subdirectory(libs/common)
 add_subdirectory(libs/gps)
+add_subdirectory(libs/bme68x)
 
 # Add tests
 add_subdirectory(tests/si_write_and_read_test)
@@ -24,4 +26,5 @@ add_subdirectory(apps/uart_echo_app)
 
 # Add tests
 add_subdirectory(tests/gps_simple_test)
+add_subdirectory(tests/bme68x_test)
 
