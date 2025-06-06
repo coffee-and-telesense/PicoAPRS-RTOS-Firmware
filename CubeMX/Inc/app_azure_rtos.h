@@ -66,4 +66,3 @@
 }
 #endif
 #endif /* APP_AZURE_RTOS_H */
-

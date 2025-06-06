@@ -19,9 +19,8 @@
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __APP_THREADX_H
-#define __APP_THREADX_H
-
+#ifndef __APP_THREADX_H__
+#define __APP_THREADX_H__
 #ifdef __cplusplus
  extern "C" {
 #endif

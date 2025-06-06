@@ -1,8 +1,5 @@
 #include "main.h"
-#include "i2c.h"
 #include "tim.h"
-#include "usart.h"
-#include "gpio.h"
 #include "logging.h"
 #include <stdio.h>
 #include <string.h>

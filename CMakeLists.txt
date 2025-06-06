@@ -29,7 +29,6 @@ add_subdirectory(libs/common)
 add_subdirectory(libs/gps)
 add_subdirectory(libs/bme68x)
 add_subdirectory(libs/transceiver)
-add_subdirectory(libs/common)
 
 
 # Add test app

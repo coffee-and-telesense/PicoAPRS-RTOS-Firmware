@@ -1,9 +1,6 @@
 // In main.c
 #include "main.h"
-#include "i2c.h"
 #include "tim.h"
-#include "usart.h"
-#include "gpio.h"
 #include <stdio.h>
  
 // Include GPS driver headers

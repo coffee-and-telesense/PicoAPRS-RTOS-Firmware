@@ -9,8 +9,6 @@
 
 #include "main.h"
 #include "spi.h"
-#include "gpio.h"
-#include "usart.h"
 #include "si4463.h"
 #include "logging.h"
 
